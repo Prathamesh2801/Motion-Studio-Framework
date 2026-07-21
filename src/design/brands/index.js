@@ -9,3 +9,4 @@
  * Remotion bundles statically, so a glob would not survive a production render.
  */
 export { editorialTheme } from './editorial/index.js';
+export { atelierTheme, atelierAmber } from './atelier/index.js';

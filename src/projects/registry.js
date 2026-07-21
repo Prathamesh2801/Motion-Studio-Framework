@@ -1,4 +1,4 @@
-import { defaultTheme, editorialTheme } from '@/design';
+import { defaultTheme, editorialTheme, atelierTheme } from '@/design';
 
 import { Hello } from './hello/index.jsx';
 import { MotionDemo } from './motion-demo/index.jsx';
@@ -9,6 +9,7 @@ import { LayoutsDemo, layoutsDuration } from './layouts-demo/index.jsx';
 import { TemplateDemo, templateDuration } from './template-demo/index.jsx';
 import { FrameworkShowcase, showcaseDuration } from './framework-showcase/index.jsx';
 import { TortureTest, tortureDuration } from './torture-test/index.jsx';
+import { FromIdeaToReality, fromIdeaToRealityDuration } from './from-idea-to-reality/index.jsx';
 
 /**
  * The project registry — every video this repo can render.
@@ -36,6 +37,16 @@ import { TortureTest, tortureDuration } from './torture-test/index.jsx';
  *   note        Why this project exists — shown in docs, not in the render.
  */
 export const PROJECTS = [
+  {
+    id: 'FromIdeaToReality',
+    component: FromIdeaToReality,
+    theme: atelierTheme,
+    formats: ['landscape', 'reel'],
+    duration: fromIdeaToRealityDuration,
+    folder: 'Film',
+    note: 'The first cinematic short built on the framework. A silent, score-driven film about the distance between having an idea and making it real.',
+  },
+
   {
     id: 'FrameworkShowcase',
     component: FrameworkShowcase,
@@ -137,7 +148,7 @@ export const PROJECTS = [
 ];
 
 /** Studio folder order. Anything not listed sorts to the end, alphabetically. */
-export const FOLDER_ORDER = ['Showcase', 'Torture-Test', 'Brand-Proof', 'Demos', 'Smoke-Test'];
+export const FOLDER_ORDER = ['Film', 'Showcase', 'Torture-Test', 'Brand-Proof', 'Demos', 'Smoke-Test'];
 
 /** Projects grouped by folder, in `FOLDER_ORDER`. */
 export const projectsByFolder = () => {
