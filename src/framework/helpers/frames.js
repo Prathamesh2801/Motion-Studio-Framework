@@ -1,26 +1,17 @@
 import { FPS } from '../formats/index.js';
 
 /**
- * Time <-> frame conversion. Motion tokens are authored in frames at `FPS`;
- * anything expressed in seconds passes through here so a future frame-rate
- * change stays a one-line edit.
+ * Frame-rate independence.
  *
- * NOTE: the seconds-based scene-plan builder that lived alongside these in the
- * reference project is intentionally NOT here — the generic, multi-timebase
- * timeline engine (frames | seconds | bars) is built as its own module in
- * Phase 3 (`framework/timeline/`). These remain the low-level primitives it
- * builds on.
+ * Motion tokens are authored in frames at `FPS` (30). Anything that must survive
+ * a composition running at a different frame rate passes through here, so the
+ * conversion lives in one place instead of being written as `fps / 30` wherever
+ * it happens to be needed.
+ *
+ * Scene *lengths* are not this module's job — that is the timeline engine's
+ * (`framework/timeline/`), which owns rounding so error never compounds across a
+ * film.
  */
-
-export const toFrames = (seconds, fps = FPS) => Math.round(seconds * fps);
-
-export const toSeconds = (frames, fps = FPS) => frames / fps;
 
 /** Rescales a frame count authored at `FPS` to the composition's actual fps. */
 export const scaleFrames = (frames, fps) => Math.round((frames * fps) / FPS);
-
-// NOTE: a `durationInFrames(seconds, fps)` helper used to live here. It was
-// removed in Phase 5: `durationInFrames` is also the name of a Remotion prop and
-// a local variable in nearly every layout, hook and component, so exporting it
-// through the barrel made accidental shadowing a matter of time. Build durations
-// with `buildTimeline` (which is the source of truth for them) or `toFrames`.

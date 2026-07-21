@@ -1,10 +1,15 @@
 /**
- * Timeline engine tests.
+ * Framework unit tests.
  *
- * The timeline and the soundtrack edit are pure and React-free, so they can be
- * asserted directly in Node with no test runner or bundler. Run:
+ * Everything asserted here is pure and React-free — the timeline, the soundtrack
+ * edit, the name resolvers, the theme contract, the animation maths and format
+ * bucketing — so it runs directly in Node with no test runner and no bundler.
+ * That is a deliberate property of the architecture, not a convenience:
  *
- *   node scripts/test-timeline.mjs
+ *   node scripts/test.mjs
+ *
+ * Anything that needs a browser is verified visually instead — see
+ * `npm run verify` and docs/FRAMEWORK_STATUS.md.
  */
 import assert from 'node:assert/strict';
 import {
@@ -20,6 +25,13 @@ import { resolveEasing } from '../src/framework/animations/easing.js';
 import { resolveTransition } from '../src/framework/transitions/index.js';
 import { validateTheme } from '../src/design/theme/contract.js';
 import { tokens } from '../src/design/theme/tokens.js';
+import { mergeMotion } from '../src/framework/animations/merge.js';
+import { fadeInOut } from '../src/framework/animations/fade.js';
+import { gradientReveal } from '../src/framework/animations/reveal.js';
+import { spin, flipIn } from '../src/framework/animations/rotate.js';
+import { scalePop } from '../src/framework/animations/scale.js';
+import { bucketFor } from '../src/framework/formats/index.js';
+import { assetsFor } from '../src/framework/assets/index.js';
 
 let passed = 0;
 const test = (name, fn) => {
@@ -408,6 +420,88 @@ test('a malformed theme names every missing token, not just the first', () => {
 
 test('the real themes satisfy the contract', () => {
   validateTheme({ name: 'tokens', ...tokens });
+});
+
+console.log('\nasset pipeline');
+
+test('resolves project-scoped paths per kind', () => {
+  const asset = assetsFor('from-idea-to-reality');
+  assert.equal(asset.music('score.wav'), '/projects/from-idea-to-reality/music/score.wav');
+  assert.equal(asset.image('hero.png'), '/projects/from-idea-to-reality/images/hero.png');
+  // An unknown kind becomes the directory verbatim — projects add categories
+  // without the framework needing to know about them.
+  assert.equal(asset('luts', 'warm.cube'), '/projects/from-idea-to-reality/luts/warm.cube');
+});
+
+test('two projects cannot collide on the same file name', () => {
+  assert.notEqual(assetsFor('a').image('logo.png'), assetsFor('b').image('logo.png'));
+});
+
+test('rejects a missing project id or file name', () => {
+  throws(() => assetsFor(''), 'a project id string is required');
+  throws(() => assetsFor('x').image(), 'a file name is required');
+});
+
+console.log('\nmergeMotion — the composition keystone');
+
+test('concatenates transforms instead of dropping all but the last', () => {
+  // This is the entire reason mergeMotion exists: `{...a, ...b}` keeps only b's
+  // transform, which renders successfully and silently loses half the animation.
+  const merged = mergeMotion(
+    { transform: 'translateY(10px)' },
+    { transform: 'scale(1.5)' },
+  );
+  assert.ok(merged.transform.includes('translateY(10px)'), 'lost the first transform');
+  assert.ok(merged.transform.includes('scale(1.5)'), 'lost the second transform');
+});
+
+test('multiplies opacities rather than overwriting them', () => {
+  // Two half-faded layers compose to a quarter, not a half.
+  assert.equal(mergeMotion({ opacity: 0.5 }, { opacity: 0.5 }).opacity, 0.25);
+});
+
+test('joins filters', () => {
+  const merged = mergeMotion({ filter: 'blur(4px)' }, { filter: 'brightness(1.2)' });
+  assert.ok(merged.filter.includes('blur(4px)') && merged.filter.includes('brightness(1.2)'));
+});
+
+test('ignores empty operands', () => {
+  assert.deepEqual(mergeMotion({ opacity: 1 }, null, undefined, {}), { opacity: 1 });
+});
+
+console.log('\nformat bucketing');
+
+test('maps every shipped format to the right bucket', () => {
+  assert.equal(bucketFor(1920, 1080), 'landscape');
+  assert.equal(bucketFor(1080, 1920), 'portrait');
+  assert.equal(bucketFor(1080, 1080), 'square');
+  assert.equal(bucketFor(2160, 3840), 'portrait', 'exhibition must bucket as portrait');
+  // The bug this guards: 32:9 used to fall into `landscape` and break.
+  assert.equal(bucketFor(3840, 1080), 'ultrawide');
+});
+
+console.log('\nanimation primitives render finite values');
+
+test('fadeInOut peaks in the hold and returns to zero', () => {
+  assert.equal(fadeInOut({ frame: 0 }).opacity, 0);
+  assert.ok(fadeInOut({ frame: 30 }).opacity > 0.9, 'should be visible mid-hold');
+  assert.ok(fadeInOut({ frame: 400 }).opacity < 0.01, 'should have faded out by the end');
+});
+
+test('scalePop is spring-driven and settles near 1', () => {
+  // The only consumer of springProgress — if this breaks, the whole spring
+  // subsystem is unexercised.
+  const settled = scalePop({ frame: 90, fps: 30 });
+  assert.match(settled.transform, /scale\(/);
+  const value = Number(settled.transform.match(/scale\(([\d.]+)\)/)[1]);
+  assert.ok(value > 0.95 && value < 1.05, `expected to settle near 1, got ${value}`);
+});
+
+test('spin, flipIn and gradientReveal produce usable style objects', () => {
+  assert.match(spin({ frame: 15 }).transform, /rotate\(/);
+  assert.match(flipIn({ frame: 10 }).transform, /rotate[XY]\(/);
+  const reveal = gradientReveal({ frame: 10 });
+  assert.ok(reveal.maskImage || reveal.WebkitMaskImage, 'expected a mask');
 });
 
 console.log(`\n${passed} passed${process.exitCode ? ' (with failures)' : ''}\n`);

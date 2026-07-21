@@ -12,7 +12,5 @@ export const compactNumber = (value, decimals = 1) => {
 export const withSeparators = (value, locale = 'en-US') =>
   Math.round(value).toLocaleString(locale);
 
-export const percent = (value, decimals = 0) => `${value.toFixed(decimals)}%`;
-
 /** Zero-pads an index for "01 / 06" style counters. */
 export const pad = (value, length = 2) => String(value).padStart(length, '0');

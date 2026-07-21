@@ -1,4 +1,10 @@
 node_modules
+
+# Render output — everything here is regenerable (`npm run verify`).
 out
+
+# OS / editor cruft
 .DS_Store
+Thumbs.db
+desktop.ini
 *.log

@@ -2,6 +2,7 @@ import React from 'react';
 import { Audio, Sequence, useVideoConfig } from 'remotion';
 import { buildSoundtrackEdit, DEFAULT_BED_GAIN, DEFAULT_FADES } from './soundtrack.js';
 import { clamp } from '../helpers/math.js';
+import { scaleFrames } from '../helpers/frames.js';
 
 /** Linear ramp, guarded against zero-length fades. Used at the film's ends. */
 const ramp = (position, length) => (length <= 0 ? 1 : clamp(position / length, 0, 1));
@@ -50,9 +51,10 @@ export const Soundtrack = ({ src, cuts, gain = DEFAULT_BED_GAIN, crossfadeFrames
   const crossfade = crossfadeFrames ?? Math.round(fps / 2);
   const segments = buildSoundtrackEdit({ fps, cuts, totalFrames: durationInFrames, crossfadeFrames: crossfade });
 
-  const scale = fps / 30;
-  const fadeIn = Math.round(fades.in * scale);
-  const fadeOut = Math.round(fades.out * scale);
+  // `DEFAULT_FADES` is authored in frames at 30fps; `scaleFrames` is the one
+  // place that conversion lives, rather than a bare `fps / 30` here.
+  const fadeIn = scaleFrames(fades.in, fps);
+  const fadeOut = scaleFrames(fades.out, fps);
 
   return (
     <>

@@ -5,4 +5,4 @@ export { GridLayer } from './GridLayer.jsx';
 export { VignetteLayer } from './VignetteLayer.jsx';
 export { AnimatedBackground } from './AnimatedBackground.jsx';
 export { FilmOverlay } from './FilmOverlay.jsx';
-export { backgroundsFor, BACKGROUND_VARIANTS, getBackground } from './backgrounds.js';
+export { backgroundsFor, getBackground } from './backgrounds.js';

@@ -89,8 +89,6 @@ export const backgroundsFor = (theme) => {
   return merged;
 };
 
-export const BACKGROUND_VARIANTS = ['studio', 'hearth', 'workshop', 'flat'];
-
 /** Resolve a variant name plus per-scene overrides into a full config. */
 export const getBackground = (theme, variant = 'studio', overrides = {}) => {
   const map = backgroundsFor(theme);
