@@ -151,7 +151,25 @@ export const atelierTheme = validateTheme(
             intensity: 0.2,
             ambientOptions: { amplitude: 8, period: 560 },
           },
+          // Haze — a second, much larger and dimmer glow, LAST so it paints
+          // over the pool above. Where the pool is a light source, this is
+          // density: a wash wide enough that the frame never reaches its
+          // falloff, so it reads as air the pool is shining through rather
+          // than a second light. Intensity kept an order of magnitude below
+          // the pool's, per the "if it's noticeable it's too strong" rule.
+          {
+            color: amber[400],
+            position: { x: 50, y: 50 },
+            size: 200,
+            intensity: 0.06,
+            ambientOptions: { amplitude: 6, period: 700 },
+          },
         ],
+        // A few warm motes drifting through the pool — atmosphere the light
+        // is passing through, not just falling on. Count and ranges left at
+        // DustLayer's own (conservative) defaults; only colour and seed are
+        // this brand's business.
+        dust: [{ color: amber[400], seed: 11, count: 8 }],
         vignette: 0.4,
       },
 
@@ -170,7 +188,19 @@ export const atelierTheme = validateTheme(
             intensity: 0.22,
             ambientOptions: { amplitude: 6, period: 620 },
           },
+          // Haze — same wash treatment as hearth, cool-toned to match. See
+          // the comment on hearth's wash entry for the reasoning.
+          {
+            color: ink.primary,
+            position: { x: 50, y: 50 },
+            size: 200,
+            intensity: 0.05,
+            ambientOptions: { amplitude: 6, period: 700 },
+          },
         ],
+        // Cool motes — a different seed from hearth/studio so the three
+        // atmospheres don't repeat the same field.
+        dust: [{ color: ink.primary, seed: 23, count: 8 }],
         vignette: 0.36,
       },
 
@@ -200,7 +230,21 @@ export const atelierTheme = validateTheme(
             intensity: 0.22,
             ambientOptions: { phase: 140, amplitude: 14, period: 460 },
           },
+          // Haze — cool, same reasoning as the dust below: this is a third
+          // wash, not a third statement in the warm/cool argument the two
+          // glows above are already making.
+          {
+            color: ink.primary,
+            position: { x: 50, y: 50 },
+            size: 200,
+            intensity: 0.05,
+            ambientOptions: { amplitude: 6, period: 700 },
+          },
         ],
+        // Cool again, not split warm/cool — dust is texture in the air, not
+        // another instance of the film's colour argument. A third distinct
+        // seed keeps Momentum's field from echoing Structure's.
+        dust: [{ color: ink.primary, seed: 41, count: 8 }],
         vignette: 0.32,
       },
     },

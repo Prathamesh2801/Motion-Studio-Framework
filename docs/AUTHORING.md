@@ -218,6 +218,94 @@ Portrait is where per-format bugs live, and it is the format nobody checks.
 
 ---
 
+## 8. Live-tuning art direction (optional)
+
+Some values in a film aren't engineering decisions — scale, position, timing,
+hold durations, easing — they're taste, and taste needs to be iterated on
+visually, not by editing constants and re-rendering. For that, use Remotion
+Studio's **native** props workflow: a Zod `schema` + `defaultProps` on a
+project, registered through the same `registerProject` path every project
+already goes through.
+
+```js
+// project.schema.js
+import { z } from 'zod';
+
+export const projectSchema = z.object({
+  intro: z.object({
+    scale: z.number(),
+    revealFrame: z.number(),
+  }),
+});
+
+export const PROJECT_DEFAULT_PROPS = {
+  intro: { scale: 1, revealFrame: 30 },
+};
+```
+
+```js
+// registry.js entry
+{
+  id: 'MyFilm',
+  component: MyFilm,
+  duration: myFilmDuration,
+  schema: projectSchema,
+  defaultProps: PROJECT_DEFAULT_PROPS,
+  formats: ['landscape', 'reel'],
+}
+```
+
+`registerProject` already forwards `schema`/`defaultProps` to every
+`<Composition>` it emits — nothing else to wire up. In Studio, this renders a
+live-editable Props panel in the sidebar, grouped by your schema's nested
+objects; editing a value there is editing a real React prop, so it updates
+the preview the same way any other prop change would. A render
+(`remotion render`/`still`) always uses `defaultProps` unless something
+explicitly passes `--props` to override them — so tuning in Studio has **zero
+effect on production output** by construction, not by convention you have to
+remember to honour.
+
+**Do not build a custom on-screen panel.** It's tempting — react state, a
+floating `<div>`, done — but it duplicates a workflow Remotion already ships,
+adds a parallel store to keep in sync, and doesn't generalize to other
+projects the way a schema does. The one exception: debug guides that must
+draw **inside the frame** (a safe-area outline, timeline markers) aren't
+"controls," they're visualizations — keep those as ordinary components,
+toggled by boolean fields in the same schema (so they're still Studio-only
+and still zero production cost), gated on `getRemotionEnvironment().isStudio`
+from `remotion` so they never mount during an actual render.
+
+**The one limitation to know:** a `<Composition>`'s `durationInFrames` isn't
+reactive to prop edits (that needs `calculateMetadata`, deliberately not used
+here to keep this pattern simple). Compute the registry's `duration` from
+`DEFAULT_PROPS`, not from live props — tuning values *within* the approved
+total works live; if a session settles on a new total, update the defaults
+(and therefore the registered duration) to match.
+
+**Carrying a tuning session back into code:** select the composition in
+Studio (nothing in the timeline selected) and open the Inspector's "Default
+Props" section. It has its own **Schema / JSON toggle** — switch to JSON and
+the current live values (including whatever you just tuned) are shown as
+plain, selectable, copyable text. Paste into `DEFAULT_PROPS` by hand.
+
+You'll notice this section also has a native **Save** action, and it's
+tempting to reach for it instead — don't rely on it here. It requires the
+`<Composition defaultProps={...}>` JSX to contain a literal object at that
+exact line, which `registerProject`'s shared, multi-format factory can't
+provide (it passes `defaultProps` through as a variable). Save will fail with
+a "must be a hardcoded value" error; the JSON toggle's copy-paste is the
+correct workflow for any project registered this way. **Do not build a
+custom copy/export button to work around this** — same reasoning as the
+on-screen panel above: it would duplicate a Studio feature that already
+exists one click away, for a save-step the framework's own architecture
+already asks you to do by hand.
+
+See `projects/from-idea-to-reality/opening/schema.js` and `opening/Opening.jsx` for
+the reference implementation — the opening sequence's wordmark/title timing
+and the safe-area/timeline-marker debug overlays are both tuned this way.
+
+---
+
 ## Common mistakes
 
 **Writing frame numbers.** If you are computing `from` or adding up durations,

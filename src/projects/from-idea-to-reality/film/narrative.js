@@ -45,7 +45,6 @@ export const ATMOSPHERE = {
   peak: 'studio',
   form: 'hearth',
   handover: 'hearth',
-  title: 'hearth',
 };
 
 /**
@@ -74,14 +73,15 @@ export const CAMERA = {
   peak: 'push',
   form: 'pull', // pulling back to reveal the whole — the first pull in the film
   handover: 'static',
-  title: 'static',
 };
 
 /**
  * ── THE WORDS ───────────────────────────────────────────────────────────────
- * Twenty-four words in eighty-odd seconds. In a silent film every word is a
- * subtitle, and a subtitle is the cheapest way to say anything — so a beat that
- * needs a sentence to work is a beat whose image has failed.
+ * In a silent film every word is a subtitle, and a subtitle is the cheapest
+ * way to say anything — so a beat that needs a sentence to work is a beat
+ * whose image has failed. The film's closing title card ("From Idea to
+ * Reality") is no longer here — it lives in `ending/Ending.jsx` now, the
+ * one place the title is spoken.
  *
  * Two registers, never mixed in one shot:
  *   serif  the human voice — feeling, decision, arrival
@@ -100,6 +100,4 @@ export const WORDS = {
   structure: 'REPEAT / ALIGN / REPEAT',
   /** serif. The arrival. */
   form: 'And it becomes real.',
-  /** serif. The title, last. */
-  title: 'From Idea to Reality',
 };

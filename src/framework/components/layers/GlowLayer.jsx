@@ -15,6 +15,11 @@ import { alpha } from '../../helpers/color.js';
  * @param {{x:number,y:number}} [position] Percent coordinates within the frame.
  * @param {number} [size]     Diameter as a percentage of frame width.
  * @param {string} [ambient]  Ambient preset name ('drift', 'float', 'none').
+ *
+ * `blur` is a design-space (1920x1080-authored) px value, run through `px()`
+ * like every other measurement here — `diameter` already scaled with `width`,
+ * but the blur radius previously didn't, so a glow tuned by eye at 1080p read
+ * proportionally under-blurred at 4K. Fixed by scaling both the same way.
  */
 export const GlowLayer = ({
   color,
@@ -27,11 +32,11 @@ export const GlowLayer = ({
   style,
 }) => {
   const theme = useTheme();
-  const { width } = useFormat();
+  const { width, px } = useFormat();
   const motionStyle = useAmbientMotion({ preset: ambient, ...ambientOptions });
   const diameter = (size / 100) * width;
   const tint = color ?? theme.colors.primary;
-  const blurRadius = blur ?? theme.blurs.ambient;
+  const blurRadius = px(blur ?? theme.blurs.ambient);
 
   return (
     <AbsoluteFill style={{ zIndex: zIndex.glow, pointerEvents: 'none', ...style }}>

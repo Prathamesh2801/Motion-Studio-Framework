@@ -44,7 +44,7 @@ Everything below is implemented, exported from `@/framework` (or `@/design` /
 | **Registry Idiom** | `framework/helpers/registry.js` | One resolver policy for all six vocabularies; unknown names throw |
 | **Responsive Engine** | `framework/formats/`, `hooks/useFormat`, `hooks/useResponsive` | 4 buckets, `px()` scaling, safe areas |
 | **Theme System** | `framework/theme/` + `design/theme/` | Static motion tokens + runtime visual theme; executable contract |
-| **Brand System** | `design/brands/` | `extendTheme` + `validateTheme`; `editorial` proves it |
+| **Brand System** | `design/brands/` | `extendTheme` + `validateTheme`; `editorial` proves it, `atelier` uses it in production |
 | **Font System** | `design/fonts/` | 6 curated faces, `delayRender`-gated, family names asserted against loaders |
 | **Asset Pipeline** | `framework/assets/` | `assetsFor(project)`, per-project scoping over `staticFile` |
 | **Component Library** | `framework/components/` | primitives · typography · layers · content · branding |
@@ -111,11 +111,37 @@ offsets, no layout maths, no per-format branching. See
 
 ## Next Milestone
 
-**The first cinematic project — "From Idea to Reality".**
+**The first cinematic project — "From Idea to Reality".** *Score integrated; opening
+and ending bookends built and tunable. Ending is a placeholder cinematic treatment —
+the next development phase replaces it with the final ending design.*
 
-The framework is feature-complete for it. The four gaps that would have forced a
-mid-project restructure are closed: fonts, assets, a proven second brand, and an
-enforced theme contract.
+A score-driven short: 18 shots, re-timed to the licensed track's measured 139.675 BPM,
+plus a silent opening and ending. Lives in `projects/from-idea-to-reality/` on its own
+brand (`design/brands/atelier`). See
+[PROJECT_ARCHITECTURE.md](PROJECT_ARCHITECTURE.md) for how it's structured; historical
+planning documents (creative direction, VFX research, the original bookend proposal)
+are archived under [docs/archive/from-idea-to-reality/](archive/from-idea-to-reality/).
+
+**Zero framework changes were required to build it.** The film is entirely a
+Ring 2 brand plus a Ring 3 project — which is the strongest evidence so far that
+the v1.0.0 API freeze holds under a real production rather than under demos.
+
+What it exercised for the first time:
+
+| First use | Where | Finding |
+| --- | --- | --- |
+| `bars` timebase on a real film | `film/filmTimeline.js` | Cuts land on the bar line; one `BPM` constant re-times all 18 shots |
+| `none` transition as house style | `index.jsx` | Hard cuts on the downbeat need overlap > 0 + type `none`, not overlap 0 — that would forbid the 1 dissolve |
+| A brand born from a production need | `brands/atelier` | The atmosphere override seam carried the film's entire lighting arc |
+| Instrument Serif | `brands/atelier` | Ships **weight 400 only**; brands must state weights AND drop display `textStyles` to 400 or the browser synthesises a fake bold |
+| Project-local components | `from-idea-to-reality/film/components/` | The ring rule held: `Mark` imports from `@/framework`, never the reverse |
+
+**Known gap, now closed:** the film briefly used a scene template (`TitleScene`) for
+its closing title card, but that shot was a leftover placeholder from before the
+opening/ending bookend work and has since been removed — the real closing title now
+lives in `ending/Ending.jsx`. All 18 shots compose layout primitives directly, since
+the film's subject is an abstract single-subject cinematic beat with no template
+shape it fits.
 
 **Phase 6 (later):** port the reference brand film to consume the framework,
 which is the ultimate validation and the trigger for extracting the framework to

@@ -1,15 +1,39 @@
-import { defaultTheme, editorialTheme, atelierTheme } from '@/design';
+import { z } from "zod";
+import { defaultTheme, atelierTheme } from "@/design";
 
-import { Hello } from './hello/index.jsx';
-import { MotionDemo } from './motion-demo/index.jsx';
-import { ComponentsDemo } from './components-demo/index.jsx';
-import { ExplainerDemo, explainerDuration } from './explainer-demo/index.jsx';
-import { MusicalDemo, musicalDuration } from './musical-demo/index.jsx';
-import { LayoutsDemo, layoutsDuration } from './layouts-demo/index.jsx';
-import { TemplateDemo, templateDuration } from './template-demo/index.jsx';
-import { FrameworkShowcase, showcaseDuration } from './framework-showcase/index.jsx';
-import { TortureTest, tortureDuration } from './torture-test/index.jsx';
-import { FromIdeaToReality, fromIdeaToRealityDuration } from './from-idea-to-reality/index.jsx';
+import {
+  FrameworkShowcase,
+  showcaseDuration,
+} from "./framework-showcase/index.jsx";
+import {
+  FromIdeaToReality,
+  fromIdeaToRealityDuration,
+} from "./from-idea-to-reality/index.jsx";
+import {
+  openingSchema,
+  OPENING_DEFAULT_PROPS,
+} from "./from-idea-to-reality/opening/schema.js";
+import {
+  endingSchema,
+  ENDING_DEFAULT_PROPS,
+} from "./from-idea-to-reality/ending/schema.js";
+
+/**
+ * `FromIdeaToReality`'s composition-level prop schema — a `<Composition>`
+ * takes exactly one `schema`, so the opening's and ending's groups (each
+ * already a complete schema in its own right, with its own `title`/`debug`
+ * groups) nest under `openingProps`/`endingProps` here rather than being
+ * flattened, which would collide on those key names. See `opening/schema.js`
+ * / `ending/schema.js` for each sequence's own groups.
+ */
+const fromIdeaToRealitySchema = z.object({
+  openingProps: openingSchema,
+  endingProps: endingSchema,
+});
+const FROM_IDEA_TO_REALITY_DEFAULT_PROPS = {
+  openingProps: OPENING_DEFAULT_PROPS,
+  endingProps: ENDING_DEFAULT_PROPS,
+};
 
 /**
  * The project registry — every video this repo can render.
@@ -38,123 +62,36 @@ import { FromIdeaToReality, fromIdeaToRealityDuration } from './from-idea-to-rea
  */
 export const PROJECTS = [
   {
-    id: 'FromIdeaToReality',
+    id: "FromIdeaToReality",
     component: FromIdeaToReality,
     theme: atelierTheme,
-    formats: ['landscape', 'reel'],
+    formats: ["landscape", "reel"],
     duration: fromIdeaToRealityDuration,
-    folder: 'Film',
-    note: 'The first cinematic short built on the framework. A silent, score-driven film about the distance between having an idea and making it real.',
+    schema: fromIdeaToRealitySchema,
+    defaultProps: FROM_IDEA_TO_REALITY_DEFAULT_PROPS,
+    folder: "Film",
+    note: "The first cinematic short built on the framework. A silent, score-driven film about the distance between having an idea and making it real. Opening and ending are both tunable live via the Studio Props panel — see opening/schema.js / ending/schema.js.",
   },
 
   {
-    id: 'FrameworkShowcase',
+    id: "FrameworkShowcase",
     component: FrameworkShowcase,
     theme: defaultTheme,
-    formats: ['landscape', 'reel'],
+    formats: ["landscape", "reel"],
     duration: showcaseDuration,
-    folder: 'Showcase',
-    note: 'The official engineering validation film. One chapter per subsystem — re-render after any framework change or dependency upgrade.',
-  },
-  {
-    id: 'TortureTest',
-    component: TortureTest,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel', 'ultrawide', 'exhibition'],
-    duration: tortureDuration,
-    folder: 'Torture-Test',
-    note: 'Robustness over beauty. The only place ultrawide and exhibition are rendered.',
-  },
-  {
-    id: 'TemplateDemoEditorial',
-    component: TemplateDemo,
-    theme: editorialTheme,
-    formats: ['landscape', 'reel'],
-    duration: templateDuration,
-    folder: 'Brand-Proof',
-    note: 'The template film under a deliberately opposite brand (light paper, editorial serif, warm shadows). A component that hardcodes "text is near-white" fails here and nowhere else.',
-  },
-
-  // ── Demos: each one proves a single subsystem in isolation. ────────────────
-  {
-    id: 'ExplainerDemo',
-    component: ExplainerDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: explainerDuration,
-    folder: 'Demos',
-    note: 'Non-musical: scene lengths in plain seconds.',
-  },
-  {
-    id: 'MusicalDemo',
-    component: MusicalDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: musicalDuration,
-    folder: 'Demos',
-    note: 'Grid-locked: cuts on a bar lattice, audio spliced from the same starts.',
-  },
-  {
-    id: 'LayoutsDemo',
-    component: LayoutsDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: layoutsDuration,
-    folder: 'Demos',
-    note: 'One scene per responsive layout primitive.',
-  },
-  {
-    id: 'TemplateDemo',
-    component: TemplateDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: templateDuration,
-    folder: 'Demos',
-    note: 'A complete film composed entirely from scene templates — no hand-written scenes.',
-  },
-
-  // ── Smoke tests: minimal compositions with no timeline or template deps. ───
-  // These predate `registerProject` and used to be registered by hand, which
-  // meant they rendered OUTSIDE the theme provider. They now go through the same
-  // path as everything else, so "it works in the smoke test" means the same
-  // thing it means everywhere else.
-  {
-    id: 'Hello',
-    component: Hello,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: 120,
-    folder: 'Smoke-Test',
-    note: 'Does the bundle build and paint at all.',
-  },
-  {
-    id: 'MotionDemo',
-    component: MotionDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: 150,
-    folder: 'Smoke-Test',
-    note: 'Motion engine without the timeline.',
-  },
-  {
-    id: 'ComponentsDemo',
-    component: ComponentsDemo,
-    theme: defaultTheme,
-    formats: ['landscape', 'reel'],
-    duration: 150,
-    folder: 'Smoke-Test',
-    note: 'Component library without the timeline.',
+    folder: "Showcase",
+    note: "The official engineering validation film. One chapter per subsystem — re-render after any framework change or dependency upgrade.",
   },
 ];
 
 /** Studio folder order. Anything not listed sorts to the end, alphabetically. */
-export const FOLDER_ORDER = ['Film', 'Showcase', 'Torture-Test', 'Brand-Proof', 'Demos', 'Smoke-Test'];
+export const FOLDER_ORDER = ["Film", "Showcase"];
 
 /** Projects grouped by folder, in `FOLDER_ORDER`. */
 export const projectsByFolder = () => {
   const groups = new Map();
   for (const project of PROJECTS) {
-    const folder = project.folder ?? 'Projects';
+    const folder = project.folder ?? "Projects";
     if (!groups.has(folder)) groups.set(folder, []);
     groups.get(folder).push(project);
   }

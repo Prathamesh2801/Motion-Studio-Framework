@@ -34,6 +34,8 @@ export const backgroundsFor = (theme) => {
         { color: colors.primary, position: { x: 50, y: 6 }, size: 110, intensity: 0.3, ambientOptions: { amplitude: 10, period: 520 } },
         { color: colors.secondary, position: { x: 92, y: 88 }, size: 60, intensity: 0.18, ambientOptions: { phase: 140, amplitude: 14, period: 460 } },
       ],
+      // Opt-in per brand — see the DustLayer note below.
+      dust: [],
       grid: false,
       vignette: 0.3,
       grain: 0.05,
@@ -46,6 +48,7 @@ export const backgroundsFor = (theme) => {
       glows: [
         { color: colors.primary, position: { x: 50, y: 44 }, size: 130, intensity: 0.26, ambientOptions: { amplitude: 8, period: 560 } },
       ],
+      dust: [],
       grid: false,
       vignette: 0.26,
       grain: 0.05,
@@ -58,6 +61,7 @@ export const backgroundsFor = (theme) => {
       glows: [
         { color: colors.primary, position: { x: 50, y: 4 }, size: 120, intensity: 0.18, ambientOptions: { amplitude: 8, period: 600 } },
       ],
+      dust: [],
       grid: true,
       vignette: 0.34,
       grain: 0.05,
@@ -68,6 +72,14 @@ export const backgroundsFor = (theme) => {
     flat: {
       gradient: colors.background,
       glows: [],
+      /**
+       * `dust` — a list of `DustLayer` prop objects, composed by
+       * `AnimatedBackground` the same way `glows` composes `GlowLayer`.
+       * Empty by default at this ring: dust isn't a general "every brand
+       * wants this" atmosphere the way glow is — it's opt-in per brand, added
+       * via a theme's `atmosphere` override (see the module comment above).
+       */
+      dust: [],
       grid: false,
       vignette: 0.18,
       grain: 0.04,

@@ -3,6 +3,7 @@ import { AbsoluteFill } from 'remotion';
 import { GradientLayer } from './GradientLayer.jsx';
 import { GlowLayer } from './GlowLayer.jsx';
 import { GridLayer } from './GridLayer.jsx';
+import { DustLayer } from './DustLayer.jsx';
 import { getBackground } from './backgrounds.js';
 import { useTheme } from '../../theme/index.js';
 
@@ -25,6 +26,9 @@ export const AnimatedBackground = ({ variant = 'studio', overrides, children, st
       {config.grid ? <GridLayer /> : null}
       {config.glows.map((glow, index) => (
         <GlowLayer key={`glow-${index}`} {...glow} />
+      ))}
+      {config.dust.map((dust, index) => (
+        <DustLayer key={`dust-${index}`} {...dust} />
       ))}
       {children}
     </AbsoluteFill>
