@@ -1,0 +1,35 @@
+{
+  "$schema": 1,
+  "pack": "subject-showcase",
+  "id": "aurora",
+  "title": "Aurora — product",
+  "format": "landscape",
+  "theme": { "brand": "default" },
+  "timing": { "pace": "normal" },
+  "data": {
+    "subject": {
+      "name": "Aurora Field Camera",
+      "shortName": "Aurora",
+      "tagline": "Built for the hour before sunrise.",
+      "badge": "01",
+      "role": "Compact mirrorless"
+    },
+    "facts": [
+      { "label": "Sensor", "value": "Full frame" },
+      { "label": "Mount", "value": "A-series" },
+      { "label": "Weight", "value": "412 g" }
+    ],
+    "figures": [
+      { "label": "Megapixels", "value": 61 },
+      { "label": "Burst / sec", "value": 30, "suffix": " fps" },
+      { "label": "Battery shots", "value": 2400, "format": "separated" },
+      { "label": "Rating", "value": 9.2, "max": 10, "format": "decimal", "decimals": 1, "emphasis": "hero" }
+    ],
+    "footnotes": [
+      { "label": "Series", "value": "Generation IV" },
+      { "label": "Availability", "value": "Spring" }
+    ],
+    "accent": null,
+    "closing": { "line": "Built for the hour before sunrise." }
+  }
+}

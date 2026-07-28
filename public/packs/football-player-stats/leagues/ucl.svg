@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 60" width="160" height="60">
+  <rect width="160" height="60" rx="10" fill="#0a1c4e"/>
+  <text x="80" y="40" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="26" font-weight="700" letter-spacing="2" fill="#ffffff">UCL</text>
+</svg>

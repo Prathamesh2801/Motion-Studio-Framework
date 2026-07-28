@@ -21,7 +21,20 @@ import { ThemeProvider } from '../theme/index.js';
  */
 const wrapperCache = new Map();
 
-const withTheme = (Component, theme) => {
+/**
+ * Wrap a composition in a <ThemeProvider>, memoised on (Component, theme).
+ *
+ * Exported because there are now TWO hosts that mount compositions — Remotion's
+ * <Composition> (below) and <Player> in the Vite editor — and they must wrap
+ * identically or the same film renders under different brands in preview and in
+ * the final MP4.
+ *
+ * The cache is the load-bearing part for the editor, not a micro-optimisation.
+ * <Player> re-renders on every keystroke in the data editor; a fresh wrapper
+ * identity each time would remount the composition and restart every animation
+ * mid-type. Both hosts sharing one cache is what makes that impossible.
+ */
+export const withTheme = (Component, theme) => {
   let byTheme = wrapperCache.get(Component);
   if (!byTheme) {
     byTheme = new Map();

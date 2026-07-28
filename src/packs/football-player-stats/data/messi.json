@@ -1,0 +1,49 @@
+{
+  "$schema": 1,
+  "pack": "football-player-stats",
+  "id": "messi",
+  "title": "Lionel Messi",
+  "format": "landscape",
+  "theme": {
+    "brand": "broadcastNight"
+  },
+  "timing": {
+    "pace": "normal"
+  },
+  "data": {
+    "player": {
+      "name": "Lionel Messi",
+      "shortName": "Messi",
+      "nickname": "La Pulga",
+      "number": "10",
+      "position": "Right Winger",
+      "nationality": {
+        "name": "Argentina",
+        "code": "ARG",
+        "flag": "flags/arg.svg"
+      },
+      "portrait": "players/messi.svg"
+    },
+    "club": {
+      "name": "Inter Miami CF",
+      "shortName": "Miami",
+      "logo": "clubs/inter.svg",
+      "color": "#f7b5cd"
+    },
+    "league": {
+      "name": "Major League Soccer",
+      "country": "United States",
+      "logo": "leagues/ucl.svg"
+    },
+    "season": "2024/25",
+    "competition": "All competitions",
+    "stats": {
+      "goals": 29,
+      "assists": 19,
+      "matches": 38,
+      "minutes": 3120,
+      "rating": 8.7,
+      "ratingMax": 10
+    }
+  }
+}

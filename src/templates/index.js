@@ -26,6 +26,14 @@
 /** Composition skeletons — assemble a timeline + scene map into a film. */
 export { StandardFilm } from './compositions/StandardFilm.jsx';
 
+// Data-shaped scenes — each takes a slice of a ViewModel (see `@/engine`) and
+// arranges it. They name no domain field, which is what lets one set of them
+// serve football, F1, cricket and product packs.
+export { SubjectIntro } from './scenes/SubjectIntro.jsx';
+export { StatBoard } from './scenes/StatBoard.jsx';
+export { MetricSpotlight } from './scenes/MetricSpotlight.jsx';
+export { IdentityCard } from './scenes/IdentityCard.jsx';
+
 export { HeroScene } from './scenes/HeroScene.jsx';
 export { TitleScene } from './scenes/TitleScene.jsx';
 export { SectionIntro } from './scenes/SectionIntro.jsx';

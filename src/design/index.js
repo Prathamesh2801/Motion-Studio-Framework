@@ -7,4 +7,11 @@
  */
 export { defaultTheme, extendTheme, validateTheme } from './theme/index.js';
 export { loadFonts, loadFace, registerFace, FONT_FACES, systemStacks } from './fonts/index.js';
-export { editorialTheme, atelierTheme, atelierAmber } from './brands/index.js';
+export {
+  editorialTheme,
+  atelierTheme,
+  atelierAmber,
+  broadcastNight,
+  broadcastDay,
+  terrace,
+} from './brands/index.js';

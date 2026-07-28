@@ -17,6 +17,14 @@ import {
   endingSchema,
   ENDING_DEFAULT_PROPS,
 } from "./from-idea-to-reality/ending/schema.js";
+import {
+  LensThreshold,
+  lensThresholdDuration,
+} from "./lens-threshold/index.jsx";
+import {
+  lensThresholdSchema,
+  LENS_THRESHOLD_DEFAULT_PROPS,
+} from "./lens-threshold/schema.js";
 
 /**
  * `FromIdeaToReality`'s composition-level prop schema — a `<Composition>`
@@ -82,10 +90,22 @@ export const PROJECTS = [
     folder: "Showcase",
     note: "The official engineering validation film. One chapter per subsystem — re-render after any framework change or dependency upgrade.",
   },
+
+  {
+    id: "LensThreshold",
+    component: LensThreshold,
+    theme: defaultTheme,
+    formats: ["landscape"],
+    duration: lensThresholdDuration,
+    schema: lensThresholdSchema,
+    defaultProps: LENS_THRESHOLD_DEFAULT_PROPS,
+    folder: "Prototypes",
+    note: "VR cinematic transition prototype — a headset becomes the portal into another world via a continuous-camera focus rack, not a cut. Footage: public/projects/lens-threshold/video/{headset-rotation.mp4,world-reveal.mov}.",
+  },
 ];
 
 /** Studio folder order. Anything not listed sorts to the end, alphabetically. */
-export const FOLDER_ORDER = ["Film", "Showcase"];
+export const FOLDER_ORDER = ["Film", "Showcase", "Prototypes"];
 
 /** Projects grouped by folder, in `FOLDER_ORDER`. */
 export const projectsByFolder = () => {

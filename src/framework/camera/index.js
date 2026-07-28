@@ -112,6 +112,44 @@ export const zoomTo = ({
 });
 
 /**
+ * Rack focus between two stacked layers — the outgoing layer defocuses and
+ * dissolves out while the incoming layer (already faintly present, per the
+ * "focus rack" transition language) sharpens and settles in.
+ *
+ * Pure two-sided tween, no masking: both layers render full-bleed and stacked
+ * (incoming beneath outgoing), so the handoff is entirely blur + opacity + a
+ * hair of scale settle — the most physically-motivated of the transition
+ * techniques, since it mimics an actual depth-of-field rack rather than
+ * compositing a cut.
+ *
+ * @returns {{ outgoing: object, incoming: object }} style objects for the two layers.
+ */
+export const focusRack = ({
+  frame,
+  duration,
+  delay = 0,
+  easing = 'smooth',
+  maxBlur = 26,
+  incomingStartBlur = 18,
+  incomingStartOpacity = 0.32,
+  incomingSettleScale = 1.03,
+}) => {
+  const progress = animate({ frame, from: 0, to: 1, delay, duration, easing });
+
+  return {
+    outgoing: {
+      filter: `blur(${progress * maxBlur}px)`,
+      opacity: 1 - progress,
+    },
+    incoming: {
+      filter: `blur(${incomingStartBlur * (1 - progress)}px)`,
+      opacity: incomingStartOpacity + (1 - incomingStartOpacity) * progress,
+      transform: transform({ scale: incomingSettleScale - (incomingSettleScale - 1) * progress }),
+    },
+  };
+};
+
+/**
  * Named camera vocabulary. A `Scene` selects one with `camera="push"`.
  * Keep it small and curated — the same discipline as the preset registries.
  */

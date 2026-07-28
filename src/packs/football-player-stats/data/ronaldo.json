@@ -1,0 +1,49 @@
+{
+  "$schema": 1,
+  "pack": "football-player-stats",
+  "id": "ronaldo",
+  "title": "Cristiano Ronaldo",
+  "format": "landscape",
+  "theme": {
+    "brand": "terrace"
+  },
+  "timing": {
+    "pace": "normal"
+  },
+  "data": {
+    "player": {
+      "name": "Cristiano Ronaldo",
+      "shortName": "Ronaldo",
+      "nickname": "CR7",
+      "number": "7",
+      "position": "Centre Forward",
+      "nationality": {
+        "name": "Portugal",
+        "code": "POR",
+        "flag": "flags/por.svg"
+      },
+      "portrait": "players/ronaldo.svg"
+    },
+    "club": {
+      "name": "Al Nassr FC",
+      "shortName": "Al Nassr",
+      "logo": "clubs/al-nassr.svg",
+      "color": "#f5d130"
+    },
+    "league": {
+      "name": "Saudi Pro League",
+      "country": "Saudi Arabia",
+      "logo": "leagues/saudi-pro-league.svg"
+    },
+    "season": "2024/25",
+    "competition": "League",
+    "stats": {
+      "goals": 35,
+      "assists": 12,
+      "matches": 41,
+      "minutes": 3560,
+      "rating": 8.4,
+      "ratingMax": 10
+    }
+  }
+}

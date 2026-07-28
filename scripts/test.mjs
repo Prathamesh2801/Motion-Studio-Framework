@@ -12,6 +12,9 @@
  * `npm run verify` and docs/FRAMEWORK_STATUS.md.
  */
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   buildTimeline,
   createBarGrid,
@@ -32,6 +35,22 @@ import { spin, flipIn } from '../src/framework/animations/rotate.js';
 import { scalePop } from '../src/framework/animations/scale.js';
 import { bucketFor } from '../src/framework/formats/index.js';
 import { assetsFor } from '../src/framework/assets/index.js';
+import {
+  normalizeMetric,
+  normalizeViewModel,
+  validateDocument,
+  formatIssues,
+  heroMetric,
+  PACE,
+} from '../src/engine/index.js';
+import { subjectShowcaseSchema } from '../src/packs/subject-showcase/schema.js';
+import { toViewModel } from '../src/packs/subject-showcase/adapter.js';
+import { buildPackTimeline } from '../src/packs/subject-showcase/timeline.js';
+import { footballPlayerSchema } from '../src/packs/football-player-stats/schema.js';
+import { toViewModel as footballViewModel } from '../src/packs/football-player-stats/adapter.js';
+import { buildPackTimeline as footballTimeline } from '../src/packs/football-player-stats/timeline.js';
+import { facets as footballFacets } from '../src/packs/football-player-stats/facets.js';
+import { getAtPath, setAtPath, applyPatch, patchMatches } from '../src/engine/patch.js';
 
 let passed = 0;
 const test = (name, fn) => {
@@ -502,6 +521,255 @@ test('spin, flipIn and gradientReveal produce usable style objects', () => {
   assert.match(flipIn({ frame: 10 }).transform, /rotate[XY]\(/);
   const reveal = gradientReveal({ frame: 10 });
   assert.ok(reveal.maskImage || reveal.WebkitMaskImage, 'expected a mask');
+});
+
+/* ── The data engine ────────────────────────────────────────────────────────
+ *
+ * The pack pipeline is pure until the moment a component reads a frame, which
+ * is what lets the whole of it be asserted here: a document goes in, a
+ * ViewModel comes out, and no browser was involved. Everything below the
+ * adapter is already covered by the motion tests above.
+ */
+
+console.log('\ndata engine — normalisation');
+test('coerces a numeric string, because hand-written JSON is not typed', () => {
+  const metric = normalizeMetric({ label: 'Goals', value: '73' });
+  assert.equal(metric.value, 73);
+  assert.equal(metric.id, 'goals', 'should slugify an id from the label');
+});
+
+test('names the offending field instead of emitting NaN', () => {
+  assert.throws(
+    () => normalizeMetric({ label: 'Goals', value: 'seventy-three' }, 2),
+    /metrics\[2\] \("Goals"\)/,
+  );
+});
+
+test('a metric with a ceiling keeps it — that is what makes it a bar', () => {
+  assert.equal(normalizeMetric({ label: 'Rating', value: 7.9, max: 10 }).max, 10);
+  assert.equal(normalizeMetric({ label: 'Goals', value: 73 }).max, undefined);
+});
+
+test('badge values stay strings so "01" survives', () => {
+  const vm = normalizeViewModel(
+    { subject: { name: 'X', badgeValue: 1 }, metrics: [] },
+    { packId: 'test' },
+  );
+  assert.equal(vm.subject.badgeValue, '1');
+});
+
+test('rejects an adapter that returned nothing, by name', () => {
+  assert.throws(() => normalizeViewModel(undefined, { packId: 'p', label: 'p/doc' }), /p\/doc/);
+});
+
+console.log('\ndata engine — the reference pack');
+const readDoc = (name) =>
+  JSON.parse(readFileSync(new URL(`../src/packs/subject-showcase/data/${name}.json`, import.meta.url)));
+
+test('both shipped documents satisfy the pack schema', () => {
+  for (const name of ['aurora', 'meridian']) {
+    const result = validateDocument(readDoc(name), subjectShowcaseSchema);
+    assert.ok(result.ok, `${name}: ${formatIssues(result.issues)}`);
+  }
+});
+
+test('the adapter produces a valid ViewModel for every document', () => {
+  for (const name of ['aurora', 'meridian']) {
+    const doc = subjectShowcaseSchema.parse(readDoc(name));
+    const vm = normalizeViewModel(toViewModel(doc), { packId: 'subject-showcase' });
+    assert.ok(vm.subject.name.length > 0);
+    assert.ok(vm.metrics.length > 0);
+  }
+});
+
+test('an invalid document reports issues rather than throwing', () => {
+  // The editor's contract: a half-typed document must never take down the
+  // preview. The render path is the one that throws.
+  const broken = { ...readDoc('aurora'), pack: undefined };
+  const result = validateDocument(broken, subjectShowcaseSchema);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.length > 0);
+});
+
+console.log('\ndata engine — structure follows data');
+test('a hero metric earns a spotlight beat; without one the film is shorter', () => {
+  const base = subjectShowcaseSchema.parse(readDoc('aurora'));
+  const withHero = normalizeViewModel(toViewModel(base), { packId: 'subject-showcase' });
+
+  const flattened = structuredClone(base);
+  flattened.data.figures = flattened.data.figures.map(({ emphasis, ...rest }) => rest);
+  const withoutHero = normalizeViewModel(toViewModel(flattened), { packId: 'subject-showcase' });
+
+  assert.ok(heroMetric(withHero), 'aurora declares a hero metric');
+  assert.equal(heroMetric(withoutHero), null);
+  assert.ok(
+    buildPackTimeline(withHero, 30).durationInFrames >
+      buildPackTimeline(withoutHero, 30).durationInFrames,
+    'the timeline must respond to the data, or duration cannot be derived from it',
+  );
+});
+
+test('pace scales the whole film without touching a scene', () => {
+  const vm = normalizeViewModel(
+    toViewModel(subjectShowcaseSchema.parse(readDoc('aurora'))),
+    { packId: 'subject-showcase' },
+  );
+  assert.ok(
+    buildPackTimeline(vm, 30, PACE.tight).durationInFrames <
+      buildPackTimeline(vm, 30, PACE.relaxed).durationInFrames,
+  );
+});
+
+console.log('\npath patching — what the application dispatches');
+test('setAtPath clones only the branch it touched', () => {
+  const doc = { data: { league: { name: 'LaLiga' }, stats: { goals: 7 } } };
+  const next = setAtPath(doc, 'data.league.name', 'Premier League');
+
+  assert.equal(next.data.league.name, 'Premier League');
+  assert.equal(doc.data.league.name, 'LaLiga', 'the original must not be mutated');
+  // The identity guarantee is why a dropdown does not remount <Player> and
+  // restart the film: untouched branches are the SAME object.
+  assert.equal(next.data.stats, doc.data.stats);
+});
+
+test('an unchanged write returns the identical object', () => {
+  const doc = { data: { season: '2024/25' } };
+  assert.equal(setAtPath(doc, 'data.season', '2024/25'), doc);
+  assert.equal(applyPatch(doc, { 'data.season': '2024/25' }), doc);
+});
+
+test('applyPatch sets every path in one pass, and patchMatches reads it back', () => {
+  const doc = { data: {} };
+  const patch = { 'data.league.name': 'Ligue 1', 'data.league.logo': 'leagues/ligue-1.svg' };
+  const next = applyPatch(doc, patch);
+
+  assert.equal(getAtPath(next, 'data.league.logo'), 'leagues/ligue-1.svg');
+  assert.equal(patchMatches(next, patch), true);
+  assert.equal(patchMatches(doc, patch), false);
+});
+
+console.log('\nfootball pack — the first real consumer');
+const readPlayer = (name) =>
+  JSON.parse(
+    readFileSync(new URL(`../src/packs/football-player-stats/data/${name}.json`, import.meta.url)),
+  );
+
+const PLAYERS = ['messi', 'ronaldo', 'haaland', 'mbappe', 'pedri', 'bellingham'];
+
+test('every shipped player document satisfies the schema', () => {
+  for (const name of PLAYERS) {
+    const result = validateDocument(readPlayer(name), footballPlayerSchema);
+    assert.ok(result.ok, `${name}: ${formatIssues(result.issues)}`);
+  }
+});
+
+test('the adapter maps every player onto the generic ViewModel', () => {
+  for (const name of PLAYERS) {
+    const doc = footballPlayerSchema.parse(readPlayer(name));
+    const vm = normalizeViewModel(footballViewModel(doc), { packId: 'football-player-stats' });
+
+    assert.equal(vm.metrics.length, 5, `${name}: goals, assists, matches, minutes, rating`);
+    assert.equal(vm.identity.length, 3, `${name}: club, nation, league`);
+    assert.ok(vm.subject.portrait?.src, `${name}: portrait must resolve`);
+    // The rating is the only bounded metric, which is what makes it an arc.
+    assert.deepEqual(
+      vm.metrics.filter((m) => m.max !== undefined).map((m) => m.id),
+      ['rating'],
+    );
+    assert.equal(heroMetric(vm)?.id, 'rating');
+  }
+});
+
+test('THE SWAP TEST — different data, identical structure', () => {
+  // The literal claim of the whole subsystem: changing the JSON changes every
+  // visible value while the film's SHAPE stays put. Asserted structurally
+  // because two stills differing is not proof the template was reused.
+  const build = (name) => {
+    const doc = footballPlayerSchema.parse(readPlayer(name));
+    const vm = normalizeViewModel(footballViewModel(doc), { packId: 'football-player-stats' });
+    return { vm, timeline: footballTimeline(vm, 30) };
+  };
+
+  const messi = build('messi');
+  const haaland = build('haaland');
+
+  // Same beats, same order, same lengths — the template is untouched.
+  assert.deepEqual(
+    messi.timeline.scenes.map((s) => [s.id, s.durationInFrames]),
+    haaland.timeline.scenes.map((s) => [s.id, s.durationInFrames]),
+  );
+  // Same metric slots in the same order — the layout is untouched.
+  assert.deepEqual(
+    messi.vm.metrics.map((m) => m.id),
+    haaland.vm.metrics.map((m) => m.id),
+  );
+
+  // ...and yet every visible value differs.
+  assert.notEqual(messi.vm.subject.name, haaland.vm.subject.name);
+  assert.notEqual(messi.vm.subject.portrait.src, haaland.vm.subject.portrait.src);
+  assert.notEqual(messi.vm.accent, haaland.vm.accent);
+  assert.notEqual(messi.vm.identity[0].value, haaland.vm.identity[0].value);
+  assert.notEqual(messi.vm.metrics[0].value, haaland.vm.metrics[0].value);
+});
+
+test('every facet option patches paths the schema actually accepts', () => {
+  // A facet with a typo'd path would silently do nothing — the dropdown would
+  // move and the frame would not change, which is the hardest bug to see.
+  const base = readPlayer('messi');
+  for (const facet of footballFacets) {
+    for (const option of facet.options) {
+      const next = applyPatch(base, option.patch);
+      const result = validateDocument(next, footballPlayerSchema);
+      assert.ok(result.ok, `${facet.id}/${option.id}: ${formatIssues(result.issues)}`);
+      assert.ok(
+        patchMatches(next, option.patch),
+        `${facet.id}/${option.id}: patch did not take effect — check the paths`,
+      );
+    }
+  }
+});
+
+console.log('\ndata engine — the architectural rule');
+test('no domain vocabulary has leaked below the adapter', () => {
+  // The claim the whole subsystem rests on: animations never know what they are
+  // animating. Asserted by grep, because a rule nobody checks is a comment.
+  //
+  // The football pack is now the live consumer, so its vocabulary is what this
+  // guards. `studio/` is included: the application renders a League dropdown,
+  // but it renders it from `pack.facets` and must never name one itself — the
+  // moment it does, it is a football editor and the cricket pack needs a second.
+  const forbidden =
+    /\b(goals?|assists?|wickets?|jersey|striker|midfielder|winger|club|league|nationality|season)\b/i;
+  const roots = ['../src/framework', '../src/templates', '../src/engine', '../src/studio'];
+
+  const walk = (dir) =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) return walk(full);
+      return /\.(js|jsx)$/.test(entry.name) ? [full] : [];
+    });
+
+  // Comments are stripped first. The rule is that no domain noun appears in the
+  // CODE — a comment that explains the rule by naming a concrete example ("73
+  // goals is a tally, 7.9 out of 10 is a proportion") is the documentation
+  // working, not the abstraction leaking. Failing those would teach authors to
+  // delete the explanations, which is the opposite of the intent.
+  //
+  // The stripping is regex-based, so a `//` inside a string literal truncates
+  // that line early. That can only cause a missed hit on one line, never a false
+  // alarm, which is the right way round for a check that gates the build.
+  const codeOnly = (source) =>
+    source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+  const offenders = roots
+    .flatMap((root) => walk(fileURLToPath(new URL(root, import.meta.url))))
+    .filter((file) => forbidden.test(codeOnly(readFileSync(file, 'utf8'))));
+
+  assert.deepEqual(
+    offenders,
+    [],
+    `domain vocabulary found below the adapter:\n  ${offenders.join('\n  ')}`,
+  );
 });
 
 console.log(`\n${passed} passed${process.exitCode ? ' (with failures)' : ''}\n`);

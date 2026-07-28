@@ -5,13 +5,17 @@ video — product showcases, explainers, documentaries, reels, kinetic type,
 infographics, brand films and formats that do not exist yet — from one codebase,
 without restructuring per project.
 
-React 19 + Remotion 4 + TailwindCSS 4. **JSX only, no TypeScript.** There is no
-Vite: Remotion ships its own bundler and Studio, and `remotion.config.js` holds
-what would otherwise be build config.
+React 19 + Remotion 4 + TailwindCSS 4. **JSX only, no TypeScript.**
+
+Two hosts, one source tree. Remotion ships its own bundler and Studio
+(`remotion.config.js`); Vite serves the **editor**, an interactive app for
+previewing data-driven videos live (`vite.config.js`). They share every
+component — see [docs/PACK_ENGINE.md](docs/PACK_ENGINE.md).
 
 ```bash
 npm install
 npm run studio      # Remotion Studio at http://localhost:3000
+npm run editor      # the data-driven editor at http://localhost:5173
 npm test            # pure-Node assertions, no runner or bundler needed
 npm run verify      # the health check: tests, theme sync, compositions, stills
 ```
@@ -63,8 +67,38 @@ src/
 │               layouts, components, camera, transitions, audio, formats, hooks.
 ├─ design/      Ring 2 — themeable. Theme contract, tokens, brands, fonts.
 ├─ templates/   12 scene templates + StandardFilm. The authoring surface.
-└─ projects/    Ring 3 — one folder per video, listed in `projects/registry.js`.
+├─ engine/      Ring 2.5 — the data contracts: documents and the ViewModel.
+├─ packs/       Ring 3a — data-driven video PRODUCTS (one template, N datasets).
+├─ projects/    Ring 3b — one folder per video, listed in `projects/registry.js`.
+├─ studio/      Ring 4 — the Vite editor. One consumer of the runtime.
+└─ runtime/     Ring 5 — the public SDK. `@motion/runtime`.
 ```
+
+**A project is one video; a pack is a video product.** A project's content is
+fixed in its own files; a pack pairs one film with a schema, so a new video is a
+new JSON document and nothing else. Both render through Remotion.
+
+```bash
+npm run editor          # pick a player from a dropdown; the whole film changes
+npm run build:runtime   # package the templates as @motion/runtime
+```
+
+Templates are consumable by **any** React app, with no knowledge of Remotion:
+
+```jsx
+import { PlayerStatsTemplate } from '@motion/runtime';
+
+<PlayerStatsTemplate data={player} />
+```
+
+See [docs/RUNTIME.md](docs/RUNTIME.md).
+
+The football pack is the worked example: one Remotion composition, six JSON
+documents, and a React app that swaps between them live. Portrait, name, number,
+crest, flag, league, five animated figures, season, competition and accent
+colour all come from the data. No component is edited, no composition is
+duplicated, and no MP4 is rendered. See
+[docs/PACK_ENGINE.md](docs/PACK_ENGINE.md).
 
 New capability arrives as **registry entries**, never as engine changes: a new
 animation, preset, camera move, transition, atmosphere recipe, timebase strategy
@@ -75,6 +109,9 @@ or scene template is an addition. See [docs/EXTENDING.md](docs/EXTENDING.md).
 | Doc | Read it when |
 | --- | --- |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | You want to know why the boundaries are where they are |
+| [RUNTIME.md](docs/RUNTIME.md) | You are consuming templates from another React app |
+| [PACK_ENGINE.md](docs/PACK_ENGINE.md) | You are building a data-driven template, or want to know how the editor and Remotion share components |
+| [SYSTEM_MAP.md](docs/SYSTEM_MAP.md) | You want the runtime flow, component tree and coupling map |
 | [AUTHORING.md](docs/AUTHORING.md) | You are making a video — **start here** |
 | [TEMPLATES.md](docs/TEMPLATES.md) | You need the slot reference for the 12 templates |
 | [THEMING.md](docs/THEMING.md) | You are building a brand, or working with fonts |

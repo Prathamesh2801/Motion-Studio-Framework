@@ -1,4 +1,5 @@
 export { Text } from './Text.jsx';
+export { SplitText } from './SplitText.jsx';
 export { HeroTitle } from './HeroTitle.jsx';
 export { SectionTitle } from './SectionTitle.jsx';
 export { Subtitle } from './Subtitle.jsx';

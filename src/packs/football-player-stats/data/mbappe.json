@@ -1,0 +1,49 @@
+{
+  "$schema": 1,
+  "pack": "football-player-stats",
+  "id": "mbappe",
+  "title": "Kylian Mbappé",
+  "format": "landscape",
+  "theme": {
+    "brand": "broadcastNight"
+  },
+  "timing": {
+    "pace": "normal"
+  },
+  "data": {
+    "player": {
+      "name": "Kylian Mbappé",
+      "shortName": "Mbappé",
+      "nickname": "Donatello",
+      "number": "9",
+      "position": "Left Winger",
+      "nationality": {
+        "name": "France",
+        "code": "FRA",
+        "flag": "flags/fra.svg"
+      },
+      "portrait": "players/mbappe.svg"
+    },
+    "club": {
+      "name": "Real Madrid",
+      "shortName": "Madrid",
+      "logo": "clubs/real-madrid.svg",
+      "color": "#00529f"
+    },
+    "league": {
+      "name": "LaLiga",
+      "country": "Spain",
+      "logo": "leagues/laliga.svg"
+    },
+    "season": "2024/25",
+    "competition": "UEFA Champions League",
+    "stats": {
+      "goals": 33,
+      "assists": 8,
+      "matches": 40,
+      "minutes": 3300,
+      "rating": 8.5,
+      "ratingMax": 10
+    }
+  }
+}

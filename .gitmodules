@@ -1,0 +1,3 @@
+[submodule "src/projects/lens-threshold/game-data/Royal_Alley"]
+	path = src/projects/lens-threshold/game-data/Royal_Alley
+	url = https://github.com/Prathamesh2801/Royal_Alley.git

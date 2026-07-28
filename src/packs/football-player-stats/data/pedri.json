@@ -1,0 +1,49 @@
+{
+  "$schema": 1,
+  "pack": "football-player-stats",
+  "id": "pedri",
+  "title": "Pedri",
+  "format": "landscape",
+  "theme": {
+    "brand": "broadcastDay"
+  },
+  "timing": {
+    "pace": "normal"
+  },
+  "data": {
+    "player": {
+      "name": "Pedri González",
+      "shortName": "Pedri",
+      "nickname": "The Metronome",
+      "number": "8",
+      "position": "Central Midfielder",
+      "nationality": {
+        "name": "Spain",
+        "code": "ESP",
+        "flag": "flags/esp.svg"
+      },
+      "portrait": "players/pedri.svg"
+    },
+    "club": {
+      "name": "FC Barcelona",
+      "shortName": "Barça",
+      "logo": "clubs/barcelona.svg",
+      "color": "#a50044"
+    },
+    "league": {
+      "name": "LaLiga",
+      "country": "Spain",
+      "logo": "leagues/laliga.svg"
+    },
+    "season": "2024/25",
+    "competition": "LaLiga",
+    "stats": {
+      "goals": 7,
+      "assists": 14,
+      "matches": 36,
+      "minutes": 2940,
+      "rating": 7.9,
+      "ratingMax": 10
+    }
+  }
+}

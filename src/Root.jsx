@@ -5,6 +5,7 @@ import './styles/tailwind.css';
 
 import { registerProject } from '@/framework';
 import { projectsByFolder } from './projects/registry.js';
+import { registerTemplates } from '@/runtime';
 
 /**
  * Composition registry — the root the renderer sees.
@@ -22,6 +23,14 @@ import { projectsByFolder } from './projects/registry.js';
  */
 export const RemotionRoot = () => (
   <>
+    {/* Templates are data-driven video PRODUCTS, not films — one composition
+        per (template x format), whose document is swapped via props rather than
+        by adding a registry entry.
+
+        Studio reaches them through the RUNTIME's published surface, the same
+        door the editor and any external React app use. See src/runtime/. */}
+    <Folder name="Templates">{registerTemplates()}</Folder>
+
     {projectsByFolder().map(([folder, projects]) => (
       <Folder key={folder} name={folder}>
         {projects.map(({ id, component, theme, formats, duration, schema, defaultProps }) =>

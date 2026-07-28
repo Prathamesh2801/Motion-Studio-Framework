@@ -1,1 +1,1 @@
-export { registerProject } from './registerProject.jsx';
+export { registerProject, withTheme } from './registerProject.jsx';

@@ -71,6 +71,7 @@ export {
   driftMotion,
   handheld,
   zoomTo,
+  focusRack,
 } from './camera/index.js';
 
 // Motion presets + resolver
@@ -103,5 +104,6 @@ export {
 // Audio (track-agnostic soundtrack edit)
 export * from './audio/index.js';
 
-// Multi-format composition registration
-export { registerProject } from './render/index.js';
+// Multi-format composition registration (+ the themed-wrapper helper both the
+// Remotion and <Player> hosts mount through — see render/registerProject.jsx)
+export { registerProject, withTheme } from './render/index.js';
