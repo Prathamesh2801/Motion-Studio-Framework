@@ -7,40 +7,26 @@
   "scripts": {
     "dev": "remotion studio src/index.jsx",
     "studio": "remotion studio src/index.jsx",
-    "editor": "vite",
-    "editor:build": "vite build",
-    "editor:preview": "vite preview",
-    "build:runtime": "vite build --config vite.runtime.config.js && node scripts/build-runtime.mjs",
     "render": "remotion render src/index.jsx",
     "still": "remotion still src/index.jsx",
     "compositions": "remotion compositions src/index.jsx",
     "upgrade": "remotion upgrade",
     "test": "node scripts/test.mjs",
-    "verify": "node scripts/verify.mjs",
     "create-project": "node scripts/create-project.mjs",
     "theme:css": "node scripts/theme-to-css.mjs",
     "theme:check": "node scripts/theme-to-css.mjs --check",
-    "make:test-track": "node scripts/make-test-track.mjs",
     "sprite": "node scripts/spritesheet.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.495",
     "@remotion/google-fonts": "4.0.495",
-    "@remotion/media": "4.0.495",
-    "@remotion/media-utils": "4.0.495",
-    "@remotion/player": "4.0.495",
-    "@remotion/shapes": "4.0.495",
     "@remotion/tailwind-v4": "4.0.495",
     "@remotion/transitions": "4.0.495",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "remotion": "4.0.495",
-    "zod": "^4.3.6"
+    "remotion": "4.0.495"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "4.1.14",
-    "@vitejs/plugin-react": "5.2.0",
-    "tailwindcss": "4.1.14",
-    "vite": "7.3.6"
+    "tailwindcss": "4.1.14"
   }
 }

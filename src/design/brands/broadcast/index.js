@@ -31,7 +31,7 @@ import { alpha } from '../../../framework/helpers/color.js';
  *      theme below is the one place that assumption is re-examined.
  *
  * The accent is deliberately NEUTRAL in all three. It is meant to be overridden
- * per document by the club's colour — see `packs/theme.js`. A brand that shipped
+ * per subject (e.g. a club's colour). A brand that shipped
  * an opinionated accent would be fighting its own data on every render.
  */
 

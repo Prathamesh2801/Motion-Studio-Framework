@@ -1,21 +1,10 @@
 node_modules
 
-# Render output — everything here is regenerable (`npm run verify`).
+# Render output — regenerable.
 out
-
-# Packaged SDK — regenerable with `npm run build:runtime`.
-dist
 
 # OS / editor cruft
 .DS_Store
 Thumbs.db
 desktop.ini
 *.log
-
-# Source footage for the lens-threshold prototype — kept out of git deliberately.
-# 83 MB of .mp4/.mov that git would keep forever, in a repo whose product is code.
-# The files stay on disk and the project renders locally; see the README beside
-# them for where they come from.
-public/projects/lens-threshold/video/**
-!public/projects/lens-threshold/video/
-!public/projects/lens-threshold/video/README.md

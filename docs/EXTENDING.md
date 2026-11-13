@@ -206,5 +206,5 @@ The test is whether the change would benefit every future project or only the on
 you are working on. If it is the latter, it belongs in the project, a template,
 or a pack.
 
-After any Ring 1 change, run `npm run verify` — that is what the showcase and
-torture test are for.
+After any Ring 1 change, run `npm test` and re-render a few stills of existing
+projects to check nothing shifted.

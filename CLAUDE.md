@@ -2,47 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Remotion 4 + React 19 + Tailwind 4 motion-graphics codebase. **JSX only, no TypeScript.** `@/` aliases `src/` (declared in `jsconfig.json`, `remotion.config.js` and both Vite configs — keep all of them in sync).
+Remotion 4 + React 19 + Tailwind 4 motion-graphics toolkit. **JSX only, no TypeScript.** `@/` aliases `src/` (declared in `jsconfig.json` and `remotion.config.js` — keep both in sync).
 
 ## Commands
 
 ```bash
 npm run studio          # Remotion Studio (entry src/index.jsx), :3000
-npm run editor          # Vite data-driven editor (src/studio), :5173
 npm test                # node scripts/test.mjs — plain node:assert, no runner
-npm run verify          # tests + theme sync + resolve compositions + 18 stills into out/verify
-npm run render -- <CompositionId> out/x.mp4
 npm run compositions    # list composition ids
-# transparent render (e.g. the icon animations in src/projects/icon-animations):
-npx remotion render src/index.jsx CloudSlash-Square out/icons/CloudSlash.mov --codec=prores --prores-profile=4444 --image-format=png --pixel-format=yuva444p10le
+npm run render -- <CompositionId> out/x.mp4
+npm run still -- <CompositionId> out/x.png --frame=60
 npm run sprite -- CloudSlash-Square [--size 256] [--fps 30] [--cols N]   # → out/sprites/<id>/{png,json,preview.html}
 npm run theme:css       # regenerate src/styles/tailwind.css from src/design/theme/tokens.js
-npm run build:runtime   # package src/runtime as @motion/runtime into dist/runtime
 npm run create-project -- my-film --title "My Film"
+# transparent render:
+npx remotion render src/index.jsx CloudSlash-Square out/icons/CloudSlash.mov --codec=prores --prores-profile=4444 --image-format=png --pixel-format=yuva444p10le
 ```
 
 No way to run a single test: `scripts/test.mjs` is one file of `test(name, fn)` calls; comment out or filter by editing it.
 
 ## Architecture
 
-Dependency points inward: `runtime → studio/packs → engine → templates → design → framework`.
+Dependency points inward: `projects → templates → design → framework`.
 
 - `framework/` — brand-agnostic primitives: animations, presets, camera, transitions, layouts, components, formats (landscape/reel/square/ultrawide/exhibition), `buildTimeline`, `registerProject`. Most extension points are name→impl registries (`helpers/registry.js`).
 - `design/` — theme contract, tokens, brands (default/atelier/editorial/broadcast), fonts. JS tokens are the source of truth; `src/styles/tailwind.css` is **generated** — never edit it by hand.
-- `templates/` — scene templates + `StandardFilm`. A film = `buildTimeline([...beats])` + a `scenes` map of beat id → scene element.
-- `projects/` — one-off films, each listed explicitly in `projects/registry.js` (explicit array, not a glob: Remotion bundles statically). `Root.jsx` maps over it via `registerProject`, which emits one `<Composition>` per format, wrapped in the theme. Duration comes from the timeline (`(fps) => frames`), never a literal.
-- `engine/` + `packs/` — data-driven "one film, N JSON documents". A pack = `schema.js` (zod), `adapter.js` (domain → ViewModel; the only file allowed domain nouns — `npm test` greps for violations), `timeline.js`, `Film.jsx`, `facets.js`, `data/*.json`, registered in `packs/registry.js`. Both Remotion `<Composition>` and editor `<Player>` mount through `resolvePack` so dims/duration/theme can't drift.
-- `studio/` — Vite editor; previews packs live with `@remotion/player`.
-- `runtime/` — `@motion/runtime` public SDK (`<PlayerStatsTemplate data={...}/>`). Templates become public via `runtime/templates.js`. Remotion packages are externals in `vite.runtime.config.js`.
+- `templates/` — 12 scene templates + `StandardFilm`. A film = `buildTimeline([...beats])` + a `scenes` map of beat id → scene element.
+- `projects/` — one folder per video, each listed explicitly in `projects/registry.js` (explicit array, not a glob: Remotion bundles statically). `Root.jsx` maps over it via `registerProject`, which emits one `<Composition>` per format (id `${id}-${Format}`), wrapped in the theme. Duration comes from the timeline (`(fps) => frames`) or a constant.
+- `projects/icon-animations/` — SVG redraws of `raw-assets/*.png`, viewBox = source PNG pixel space. Patched vial image lives in `public/projects/icon-animations/`.
+- `SpriteSheet.jsx` — a `Tools/SpriteSheet` composition driven by `scripts/spritesheet.mjs`: one still where each cell is a `<Freeze>` of a registered project.
 
 ## Gotchas
 
-- Framework components call `useCurrentFrame()`; they only render inside Remotion or `@remotion/player`.
-- Config must be named `remotion.config.js` — a `.mjs` is silently ignored.
-- Vite is pinned to 7 because `@tailwindcss/vite` 4.1.x rejects Vite 8. All `@remotion/*` must share one exact version.
-- Consumers of the runtime must install the `npm pack` tarball, not `npm link` (duplicate React → `useMemo` of null). `autoPlay` alone stays frozen on frame 0 until user interaction; pass `controls`.
-- `public/projects/lens-threshold/video/**` is gitignored (large footage); `src/projects/lens-threshold/game-data/Royal_Alley` is a git submodule.
-- `out/` and `dist/` are regenerable build output.
-- Sprite sheets come from the `SpriteSheet` composition (`src/SpriteSheet.jsx`): one still, each cell a `<Freeze>` of the source. So SVG `id`s in animations must be unique per instance (`useId`), or every cell uses the first cell's mask/gradient. Child `useVideoConfig()` there reports the sheet's size, not the source's.
-
-Further detail lives in `docs/` (`AUTHORING.md`, `PACK_ENGINE.md`, `RUNTIME.md`, `TEMPLATES.md`).
+- Framework components call `useCurrentFrame()`; they only render inside Remotion.
+- Config must be named `remotion.config.js` — a `.mjs` is silently ignored. Don't set CRF there: ProRes rejects `--crf`.
+- All `@remotion/*` packages must share one exact version.
+- No global page background (removed from `theme-to-css.mjs`) so renders can be transparent; films paint their own backgrounds.
+- Sprite sheets: `<Freeze>` clamps to the composition's length, so the SpriteSheet composition spans all frozen frames. SVG `id`s in animations must be unique per instance (`useId`), or every cell uses the first cell's mask/gradient. Child `useVideoConfig()` there reports the sheet's size, not the source's.
+- Remotion's bundled ffmpeg is a stripped build (no `fps`/`tile` filters) — don't plan on it for image processing.
+- From scripts, call `node node_modules/@remotion/cli/remotion-cli.js`, not `npx`: on Windows `npx` goes via cmd, which splits arguments on `,` and `=`.
+- `out/` is regenerable build output.

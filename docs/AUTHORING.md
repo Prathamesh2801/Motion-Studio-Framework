@@ -199,14 +199,11 @@ Everything is silent-safe: omit `soundtrack` and nothing else changes.
 ## 7. Verify
 
 ```bash
-npm run verify
+npm test
+npm run theme:check
 ```
 
-Runs the tests, checks the generated Tailwind theme is in sync, resolves every
-composition, and renders 18 stills across landscape, portrait, ultrawide and
-exhibition. Add `-- --full` for a complete MP4.
-
-For your own film, render stills at representative frames of each beat and *look
+Then render stills at representative frames of each beat and *look
 at them*, in **both** a landscape and a vertical format:
 
 ```bash
@@ -300,10 +297,6 @@ on-screen panel above: it would duplicate a Studio feature that already
 exists one click away, for a save-step the framework's own architecture
 already asks you to do by hand.
 
-See `projects/from-idea-to-reality/opening/schema.js` and `opening/Opening.jsx` for
-the reference implementation — the opening sequence's wordmark/title timing
-and the safe-area/timeline-marker debug overlays are both tuned this way.
-
 ---
 
 ## Common mistakes
@@ -312,8 +305,7 @@ and the safe-area/timeline-marker debug overlays are both tuned this way.
 the timeline should be doing it.
 
 **Branching on format inside a scene.** `if (isVertical)` in a scene means a
-layout prop is missing a per-bucket map. Layouts own reflow — see
-[BEST_PRACTICES.md](BEST_PRACTICES.md).
+layout prop is missing a per-bucket map. Layouts own reflow.
 
 **Hardcoding a pixel value.** Wrap every dimension in `px()` from `useFormat()`
 or it will not scale across formats.

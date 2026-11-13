@@ -148,9 +148,8 @@ a layout concern.
 
 ## Every optional slot is genuinely optional
 
-`TortureTest` renders all 12 templates with **only** their required props and no
-optional slots. If a template collapses or throws when a slot is omitted, that
-is a bug — file it rather than working around it.
+If a template collapses or throws when an optional slot is omitted, that is a
+bug in the template — fix it rather than working around it.
 
 ---
 
@@ -160,7 +159,7 @@ In order of preference:
 
 1. **Fill a slot with richer JSX.** Usually sufficient.
 2. **Compose layout primitives directly** — `Scene`, `Stack`, `Split`, `Grid`,
-   `Center`, `FullBleed`. See [ARCHITECTURE.md](ARCHITECTURE.md).
+   `Center`, `FullBleed` (in `src/framework/layouts`).
 3. **Write a new template**, if the shape will recur. It must import from
    `@/framework` only — never from `design/` or another project, or it stops
    being theme-independent. See [EXTENDING.md](EXTENDING.md).

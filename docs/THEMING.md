@@ -173,7 +173,7 @@ in `stacks.js`, so the codegen's CSS and the actual loaded font cannot drift.
 
 ```bash
 npm run theme:css      # regenerate from tokens.js
-npm run theme:check    # fail if out of date (part of `npm run verify`)
+npm run theme:check    # fail if out of date
 ```
 
 The JS theme is authoritative; a Tailwind class cannot vary per frame, so
