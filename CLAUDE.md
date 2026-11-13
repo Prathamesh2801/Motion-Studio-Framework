@@ -15,6 +15,7 @@ npm run render -- <CompositionId> out/x.mp4
 npm run compositions    # list composition ids
 # transparent render (e.g. the icon animations in src/projects/icon-animations):
 npx remotion render src/index.jsx CloudSlash-Square out/icons/CloudSlash.mov --codec=prores --prores-profile=4444 --image-format=png --pixel-format=yuva444p10le
+npm run sprite -- CloudSlash-Square [--size 256] [--fps 30] [--cols N]   # → out/sprites/<id>/{png,json,preview.html}
 npm run theme:css       # regenerate src/styles/tailwind.css from src/design/theme/tokens.js
 npm run build:runtime   # package src/runtime as @motion/runtime into dist/runtime
 npm run create-project -- my-film --title "My Film"
@@ -42,5 +43,6 @@ Dependency points inward: `runtime → studio/packs → engine → templates →
 - Consumers of the runtime must install the `npm pack` tarball, not `npm link` (duplicate React → `useMemo` of null). `autoPlay` alone stays frozen on frame 0 until user interaction; pass `controls`.
 - `public/projects/lens-threshold/video/**` is gitignored (large footage); `src/projects/lens-threshold/game-data/Royal_Alley` is a git submodule.
 - `out/` and `dist/` are regenerable build output.
+- Sprite sheets come from the `SpriteSheet` composition (`src/SpriteSheet.jsx`): one still, each cell a `<Freeze>` of the source. So SVG `id`s in animations must be unique per instance (`useId`), or every cell uses the first cell's mask/gradient. Child `useVideoConfig()` there reports the sheet's size, not the source's.
 
 Further detail lives in `docs/` (`AUTHORING.md`, `PACK_ENGINE.md`, `RUNTIME.md`, `TEMPLATES.md`).

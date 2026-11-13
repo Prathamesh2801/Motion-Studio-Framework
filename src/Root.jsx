@@ -6,6 +6,7 @@ import './styles/tailwind.css';
 import { registerProject } from '@/framework';
 import { projectsByFolder } from './projects/registry.js';
 import { registerTemplates } from '@/runtime';
+import { SpriteSheetComposition } from './SpriteSheet.jsx';
 
 /**
  * Composition registry — the root the renderer sees.
@@ -30,6 +31,9 @@ export const RemotionRoot = () => (
         Studio reaches them through the RUNTIME's published surface, the same
         door the editor and any external React app use. See src/runtime/. */}
     <Folder name="Templates">{registerTemplates()}</Folder>
+    <Folder name="Tools">
+      <SpriteSheetComposition />
+    </Folder>
 
     {projectsByFolder().map(([folder, projects]) => (
       <Folder key={folder} name={folder}>

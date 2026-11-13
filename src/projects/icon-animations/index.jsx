@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import {
   AbsoluteFill,
   Easing,
@@ -25,6 +25,10 @@ const progress = (frame, start, length, easing = ease) =>
 
 /** Stroke draw-on for a path with pathLength={1}. */
 const drawn = (p) => ({ strokeDasharray: 1, strokeDashoffset: 1 - p });
+
+// SVG ids are document-global; a unique prefix keeps several instances on one
+// page (e.g. a sprite sheet) from all using the first instance's mask.
+const useUid = () => useId().replace(/:/g, '');
 
 const usePop = (start, config = { damping: 12, stiffness: 160 }) => {
   const frame = useCurrentFrame();
@@ -69,6 +73,7 @@ const Dot = ({ cx, cy, r, start, drop = 0 }) => {
 
 export const CloudSlash = () => {
   const frame = useCurrentFrame();
+  const u = useUid();
   const outline = progress(frame, 0, 30);
   const cut = progress(frame, 50, 16, Easing.out(Easing.cubic));
   const split = usePop(64, { damping: 10, stiffness: 120 }) * 4;
@@ -93,17 +98,17 @@ export const CloudSlash = () => {
   return (
     <Stage viewBox="0 0 414 383">
       <defs>
-        <mask id="cut" maskUnits="userSpaceOnUse" x="-50" y="-50" width="514" height="483">
+        <mask id={`${u}cut`} maskUnits="userSpaceOnUse" x="-50" y="-50" width="514" height="483">
           <rect x="-50" y="-50" width="514" height="483" fill="white" />
           {slashLine({ stroke: 'black', strokeWidth: 48 })}
         </mask>
         {/* Half-planes either side of the slash line (y = 46 - 0.96(x - 357)). */}
-        <clipPath id="sideA"><polygon points="-600,965 1004,-575 -600,-600" /></clipPath>
-        <clipPath id="sideB"><polygon points="-600,965 1004,-575 1004,1272 -600,1272" /></clipPath>
+        <clipPath id={`${u}A`}><polygon points="-600,965 1004,-575 -600,-600" /></clipPath>
+        <clipPath id={`${u}B`}><polygon points="-600,965 1004,-575 1004,1272 -600,1272" /></clipPath>
       </defs>
-      <g mask="url(#cut)">
-        <g clipPath="url(#sideA)" transform={`translate(${-N.x * split} ${-N.y * split})`}>{cloud}</g>
-        <g clipPath="url(#sideB)" transform={`translate(${N.x * split} ${N.y * split})`}>{cloud}</g>
+      <g mask={`url(#${u}cut)`}>
+        <g clipPath={`url(#${u}A)`} transform={`translate(${-N.x * split} ${-N.y * split})`}>{cloud}</g>
+        <g clipPath={`url(#${u}B)`} transform={`translate(${N.x * split} ${N.y * split})`}>{cloud}</g>
       </g>
       {slashLine({ stroke: 'white', strokeWidth: 20 })}
     </Stage>
@@ -114,7 +119,7 @@ export const CloudSlash = () => {
 
 const Badge = ({ cx, cy, start, colors, children }) => {
   const s = usePop(start);
-  const id = `badge-${colors[0].slice(1)}`;
+  const id = `${useUid()}badge`;
   return (
     <g transform={`translate(${cx} ${cy}) scale(${Math.max(0, s)})`}>
       <defs>
@@ -176,13 +181,14 @@ const HEAD = 'M 216 21 L 284 4 L 307 76 L 277 61 Z';
 
 export const ChartArrow = () => {
   const frame = useCurrentFrame();
+  const u = useUid();
   const shaft = progress(frame, 36, 28, Easing.inOut(Easing.quad));
   const head = usePop(60, { damping: 11, stiffness: 180 });
 
   return (
     <Stage viewBox="0 0 340 355">
       <defs>
-        <mask id="shaft" maskUnits="userSpaceOnUse" x="-20" y="-20" width="380" height="395">
+        <mask id={`${u}shaft`} maskUnits="userSpaceOnUse" x="-20" y="-20" width="380" height="395">
           <path d={SPINE} pathLength={1} fill="none" stroke="white" strokeWidth={70} style={drawn(shaft)} />
         </mask>
       </defs>
@@ -191,7 +197,7 @@ export const ChartArrow = () => {
           const h = (BASELINE - top) * usePop(start, { damping: 14, stiffness: 110 });
           return <rect key={i} x={x} y={BASELINE - h} width={w} height={Math.max(0, h)} />;
         })}
-        <path d={SHAFT} mask="url(#shaft)" />
+        <path d={SHAFT} mask={`url(#${u}shaft)`} />
         {/* The head grows out of its base, where the shaft enters it. */}
         <g transform={`translate(265 50) scale(${Math.max(0, head)}) translate(-265 -50)`}>
           <path d={HEAD} />

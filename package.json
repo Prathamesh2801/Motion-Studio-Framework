@@ -20,7 +20,8 @@
     "create-project": "node scripts/create-project.mjs",
     "theme:css": "node scripts/theme-to-css.mjs",
     "theme:check": "node scripts/theme-to-css.mjs --check",
-    "make:test-track": "node scripts/make-test-track.mjs"
+    "make:test-track": "node scripts/make-test-track.mjs",
+    "sprite": "node scripts/spritesheet.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.495",
