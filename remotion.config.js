@@ -24,7 +24,6 @@ Config.setVideoImageFormat('jpeg');
 Config.setJpegQuality(90);
 Config.setPixelFormat('yuv420p');
 Config.setCodec('h264');
-Config.setCrf(18);
 
 Config.setChromiumOpenGlRenderer('angle');
 

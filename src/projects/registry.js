@@ -25,6 +25,12 @@ import {
   lensThresholdSchema,
   LENS_THRESHOLD_DEFAULT_PROPS,
 } from "./lens-threshold/schema.js";
+import {
+  CloudSlash,
+  VialsVerdict,
+  ChartArrow,
+  ICON_DURATION,
+} from "./icon-animations/index.jsx";
 
 /**
  * `FromIdeaToReality`'s composition-level prop schema — a `<Composition>`
@@ -69,6 +75,18 @@ const FROM_IDEA_TO_REALITY_DEFAULT_PROPS = {
  *   note        Why this project exists — shown in docs, not in the render.
  */
 export const PROJECTS = [
+  ...[
+    ["CloudSlash", CloudSlash],
+    ["VialsVerdict", VialsVerdict],
+    ["ChartArrow", ChartArrow],
+  ].map(([id, component]) => ({
+    id,
+    component,
+    formats: ["square"],
+    duration: ICON_DURATION,
+    folder: "Icons",
+  })),
+
   {
     id: "FromIdeaToReality",
     component: FromIdeaToReality,
@@ -105,7 +123,7 @@ export const PROJECTS = [
 ];
 
 /** Studio folder order. Anything not listed sorts to the end, alphabetically. */
-export const FOLDER_ORDER = ["Film", "Showcase", "Prototypes"];
+export const FOLDER_ORDER = ["Icons", "Film", "Showcase", "Prototypes"];
 
 /** Projects grouped by folder, in `FOLDER_ORDER`. */
 export const projectsByFolder = () => {
