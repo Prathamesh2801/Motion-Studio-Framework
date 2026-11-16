@@ -29,7 +29,8 @@ Dependency points inward: `projects → templates → design → framework`.
 - `design/` — theme contract, tokens, brands (default/atelier/editorial/broadcast), fonts. JS tokens are the source of truth; `src/styles/tailwind.css` is **generated** — never edit it by hand.
 - `templates/` — 12 scene templates + `StandardFilm`. A film = `buildTimeline([...beats])` + a `scenes` map of beat id → scene element.
 - `projects/` — one folder per video, each listed explicitly in `projects/registry.js` (explicit array, not a glob: Remotion bundles statically). `Root.jsx` maps over it via `registerProject`, which emits one `<Composition>` per format (id `${id}-${Format}`), wrapped in the theme. Duration comes from the timeline (`(fps) => frames`) or a constant.
-- `projects/icon-animations/` — SVG redraws of `raw-assets/*.png`, viewBox = source PNG pixel space. Raster sources and their patched copies (badges/droplets painted out so they can be animated back in: `vials.png`, `disc-clean.png`) live in `public/projects/icon-animations/`.
+- `raw-assets/` — inbox: the user drops source PNGs here to be animated; once done they're committed then removed (originals stay in git history, e.g. commit e81708b).
+- `projects/icon-animations/` — SVG redraws of those source PNGs, viewBox = source PNG pixel space. Raster sources and their patched copies (badges/droplets painted out so they can be animated back in: `vials.png`, `disc-clean.png`) live in `public/projects/icon-animations/`.
 - `SpriteSheet.jsx` — a `Tools/SpriteSheet` composition driven by `scripts/spritesheet.mjs`: one still where each cell is a `<Freeze>` of a registered project.
 
 ## Gotchas
