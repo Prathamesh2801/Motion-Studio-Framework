@@ -1,6 +1,9 @@
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
 import {
   AbsoluteFill,
+  cancelRender,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   spring,
@@ -29,6 +32,22 @@ const drawn = (p) => ({ strokeDasharray: 1, strokeDashoffset: 1 - p });
 // SVG ids are document-global; a unique prefix keeps several instances on one
 // page (e.g. a sprite sheet) from all using the first instance's mask.
 const useUid = () => useId().replace(/:/g, '');
+
+/**
+ * SVG <image> that holds the frame until the picture has loaded. Remotion only
+ * waits for media it knows about (e.g. <Img>), not raw SVG images — without
+ * this a frame can be captured before the PNG arrives and come out blank.
+ */
+const SvgImage = (props) => {
+  const [handle] = useState(() => delayRender(`Loading ${props.href}`));
+  return (
+    <image
+      {...props}
+      onLoad={() => continueRender(handle)}
+      onError={() => cancelRender(new Error(`Could not load ${props.href}`))}
+    />
+  );
+};
 
 const usePop = (start, config = { damping: 12, stiffness: 160 }) => {
   const frame = useCurrentFrame();
@@ -145,7 +164,7 @@ export const VialsVerdict = () => {
 
   return (
     <Stage viewBox="0 0 426 377" shadow={false}>
-      <image
+      <SvgImage
         href={staticFile('projects/icon-animations/vials.png')}
         width={426}
         height={377}
@@ -395,7 +414,7 @@ const Droplet = ({ d, i, u, start }) => {
       <mask id={`${u}d${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="447" height="401">
         <ellipse cx={d.cx - 1} cy={d.cy + 1} rx={d.rx + 5} ry={d.ry + 5} fill="white" filter={`url(#${u}soft)`} />
       </mask>
-      <image href={staticFile('projects/icon-animations/disc.png')} width={447} height={401} mask={`url(#${u}d${i})`} />
+      <SvgImage href={staticFile('projects/icon-animations/disc.png')} width={447} height={401} mask={`url(#${u}d${i})`} />
     </g>
   );
 };
@@ -415,7 +434,7 @@ export const DropletBeads = () => {
         opacity={Math.min(1, disc * 1.4)}
         transform={`translate(212 203) scale(${0.85 + 0.15 * disc}) translate(-212 -203)`}
       >
-        <image href={staticFile('projects/icon-animations/disc-clean.png')} width={447} height={401} />
+        <SvgImage href={staticFile('projects/icon-animations/disc-clean.png')} width={447} height={401} />
         {DROPLETS.map((d, i) => (
           <Droplet key={i} d={d} i={i} u={u} start={30 + i * 14} />
         ))}
@@ -474,7 +493,7 @@ export const VialsSealed = () => {
           <g key={i}>
             <g opacity={rise} transform={`translate(0 ${50 * (1 - rise)})`}>
               <g clipPath={`url(#${u}col${i})`}>
-                <image href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}bodies)`} />
+                <SvgImage href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}bodies)`} />
               </g>
               {/* the open neck's glass lip — gone once the cap lands */}
               <ellipse
@@ -484,11 +503,150 @@ export const VialsSealed = () => {
               />
             </g>
             <g opacity={shown} transform={`translate(0 ${-LIFT * (1 - fall)})`}>
-              <image href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}cap${i})`} />
+              <SvgImage href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}cap${i})`} />
             </g>
           </g>
         );
       })}
+    </Stage>
+  );
+};
+
+/* ── 8. Four vials rise like a bar chart ────────────────────────────────── */
+
+// Column boundaries sit in the gaps between vials; FLOOR is just below their bases.
+const FOUR = { w: 1331, h: 1182, floor: 1160 };
+const FOUR_COLS = [[0, 323, 472], [323, 618, 378], [618, 929, 285], [929, 1331, 29]]; // x0, x1, top
+
+export const FourVialsRise = () => {
+  const u = useUid();
+  const src = staticFile('projects/icon-animations/four-vials.png');
+
+  return (
+    <Stage viewBox="40 0 1250 1182" shadow={false}>
+      <defs>
+        {FOUR_COLS.map(([x0, x1], i) => (
+          <clipPath key={i} id={`${u}c${i}`}>
+            <rect x={x0} y={0} width={x1 - x0} height={FOUR.floor} />
+          </clipPath>
+        ))}
+      </defs>
+      {FOUR_COLS.map(([, , top], i) => (
+        <Riser key={i} clip={`url(#${u}c${i})`} start={i * 9} height={FOUR.floor - top} src={src} />
+      ))}
+    </Stage>
+  );
+};
+
+/** One vial column emerging from the floor line, settling with a little spring. */
+const Riser = ({ clip, start, height, src }) => {
+  const s = usePop(start, { damping: 13, stiffness: 120 });
+  return (
+    <g clipPath={clip}>
+      <SvgImage href={src} width={FOUR.w} height={FOUR.h} transform={`translate(0 ${(height + 20) * (1 - s)})`} />
+    </g>
+  );
+};
+
+/* ── 9. Dispensers lower, then pour into the vials ──────────────────────── */
+
+// dispensers-clean.png has the streams painted out (rims rebuilt underneath);
+// dispensers-streams.png holds just the streams. NOZZLE splits dispensers from vials.
+const DISP = { w: 1268, h: 1241, nozzle: 462, pourTop: 455, pourBottom: 630 };
+const DISP_COLS = [[0, 470], [470, 815], [815, 1268]];
+
+export const DispenserPour = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const clean = staticFile('projects/icon-animations/dispensers-clean.png');
+  const streams = staticFile('projects/icon-animations/dispensers-streams.png');
+  const img = (href) => <SvgImage href={href} width={DISP.w} height={DISP.h} />;
+
+  return (
+    <Stage viewBox="120 30 1030 1180" shadow={false}>
+      <defs>
+        {DISP_COLS.map(([x0, x1], i) => (
+          <React.Fragment key={i}>
+            <clipPath id={`${u}top${i}`}>
+              <rect x={x0} y={0} width={x1 - x0} height={DISP.nozzle} />
+            </clipPath>
+            <clipPath id={`${u}bot${i}`}>
+              <rect x={x0} y={DISP.nozzle} width={x1 - x0} height={DISP.h - DISP.nozzle} />
+            </clipPath>
+            {/* the stream grows down from the nozzle */}
+            <clipPath id={`${u}pour${i}`}>
+              <rect
+                x={x0}
+                y={DISP.pourTop}
+                width={x1 - x0}
+                height={(DISP.pourBottom - DISP.pourTop) * progress(frame, 44 + i * 12, 12, Easing.in(Easing.quad))}
+              />
+            </clipPath>
+          </React.Fragment>
+        ))}
+      </defs>
+
+      {DISP_COLS.map((_, i) => {
+        const rise = progress(frame, i * 4, 22, Easing.out(Easing.cubic));
+        const lower = progress(frame, 12 + i * 4, 24, Easing.out(Easing.back(1.2)));
+        return (
+          <g key={i}>
+            <g clipPath={`url(#${u}bot${i})`} opacity={rise}>
+              <g transform={`translate(0 ${60 * (1 - rise)})`}>{img(clean)}</g>
+            </g>
+            <g clipPath={`url(#${u}pour${i})`}>{img(streams)}</g>
+            <g clipPath={`url(#${u}top${i})`} opacity={Math.min(1, lower * 1.5)}>
+              <g transform={`translate(0 ${-140 * (1 - lower)})`}>{img(clean)}</g>
+            </g>
+          </g>
+        );
+      })}
+    </Stage>
+  );
+};
+
+/* ── 10. Horizontal vial, then the cap slides on ────────────────────────── */
+
+// The cap is cut along its collar's curved left edge (an ellipse arc fitted to
+// the source); above and below the collar the cut runs straight down at CAPH.cx.
+const CAPH = { w: 2106, h: 747, cx: 1622, cy: 392, rx: 121, ry: 205 };
+const CAPH_REGION =
+  `M ${CAPH.w} 0 L ${CAPH.cx} 0 L ${CAPH.cx} ${CAPH.cy - CAPH.ry} ` +
+  `A ${CAPH.rx} ${CAPH.ry} 0 0 0 ${CAPH.cx} ${CAPH.cy + CAPH.ry} ` +
+  `L ${CAPH.cx} ${CAPH.h} L ${CAPH.w} ${CAPH.h} Z`;
+
+export const VialCapSlide = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const src = staticFile('projects/icon-animations/vial-capped.png');
+  const enter = progress(frame, 0, 24, Easing.out(Easing.cubic));
+  const slide = progress(frame, 30, 26, Easing.bounce);
+  const shown = progress(frame, 30, 6);
+  const img = <SvgImage href={src} width={CAPH.w} height={CAPH.h} />;
+
+  return (
+    <Stage viewBox="110 60 1880 640" shadow={false}>
+      <defs>
+        <mask id={`${u}body`} maskUnits="userSpaceOnUse" x="0" y="0" width={CAPH.w} height={CAPH.h}>
+          <rect width={CAPH.w} height={CAPH.h} fill="white" />
+          <path d={CAPH_REGION} fill="black" />
+        </mask>
+        <mask id={`${u}cap`} maskUnits="userSpaceOnUse" x="0" y="0" width={CAPH.w} height={CAPH.h}>
+          <path d={CAPH_REGION} fill="white" />
+        </mask>
+      </defs>
+      <g opacity={enter} transform={`translate(${-160 * (1 - enter)} 0)`}>
+        <g mask={`url(#${u}body)`}>{img}</g>
+        {/* the open neck's glass lip — gone once the cap is on */}
+        <ellipse
+          cx={CAPH.cx - 14} cy={CAPH.cy} rx={22} ry={CAPH.ry - 12}
+          fill="none" stroke="white" strokeOpacity={0.5} strokeWidth={6}
+          opacity={1 - slide}
+        />
+      </g>
+      <g opacity={shown} transform={`translate(${520 * (1 - slide)} 0)`}>
+        <g mask={`url(#${u}cap)`}>{img}</g>
+      </g>
     </Stage>
   );
 };

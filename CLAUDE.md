@@ -40,6 +40,7 @@ Dependency points inward: `projects → templates → design → framework`.
 - All `@remotion/*` packages must share one exact version.
 - No global page background (removed from `theme-to-css.mjs`) so renders can be transparent; films paint their own backgrounds.
 - Sprite sheets: `<Freeze>` clamps to the composition's length, so the SpriteSheet composition spans all frozen frames. SVG `id`s in animations must be unique per instance (`useId`), or every cell uses the first cell's mask/gradient. Child `useVideoConfig()` there reports the sheet's size, not the source's.
+- Raster images inside SVG must use `SvgImage` (icon-animations/index.jsx), never a bare `<image>`: Remotion doesn't wait for raw SVG images, so a still or sprite cell can capture before the PNG loads and come out blank.
 - Remotion's bundled ffmpeg is a stripped build (no `fps`/`tile` filters) — don't plan on it for image processing.
 - From scripts, call `node node_modules/@remotion/cli/remotion-cli.js`, not `npx`: on Windows `npx` goes via cmd, which splits arguments on `,` and `=`.
 - `out/` is regenerable build output.

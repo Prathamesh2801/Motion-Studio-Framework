@@ -6,6 +6,9 @@ import {
   Cylinder90,
   DropletBeads,
   VialsSealed,
+  FourVialsRise,
+  DispenserPour,
+  VialCapSlide,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -32,6 +35,9 @@ export const PROJECTS = [
     ["Cylinder90", Cylinder90],
     ["DropletBeads", DropletBeads],
     ["VialsSealed", VialsSealed],
+    ["FourVialsRise", FourVialsRise],
+    ["DispenserPour", DispenserPour],
+    ["VialCapSlide", VialCapSlide],
   ].map(([id, component]) => ({
     id,
     component,
