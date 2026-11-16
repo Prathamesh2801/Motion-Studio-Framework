@@ -650,3 +650,129 @@ export const VialCapSlide = () => {
     </Stage>
   );
 };
+
+/* ── 11. Neon shield draws on, droplet falls in ─────────────────────────── */
+
+// shield-outline.png / shield-drop.png are the two halves of the source. The
+// shield is revealed by a thick brush along its centreline, peak → tip, both sides.
+const SHIELD = { w: 1266, h: 1243 };
+const SHIELD_HALVES = [
+  'M 633 151 C 540 235 420 300 225 312 L 216 420 C 220 700 380 930 633 1075',
+  'M 633 151 C 726 235 846 300 1041 312 L 1050 420 C 1046 700 886 930 633 1075',
+];
+const DROP_C = { x: 629, y: 615 }; // droplet centre, for squash
+
+export const ShieldDrop = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const u = useUid();
+  const draw = progress(frame, 0, 34);
+  const fall = progress(frame, 36, 14, Easing.in(Easing.quad));
+  // squash on impact, then spring back to round
+  const settle = spring({ frame: frame - 50, fps, config: { damping: 8, stiffness: 180 } });
+  const squash = frame < 50 ? 0 : 0.18 * (1 - settle);
+  const pulse = interpolate(frame, [70, 82, 100], [0, 1, 0], clamp);
+  const img = (name) => (
+    <SvgImage href={staticFile(`projects/icon-animations/${name}`)} width={SHIELD.w} height={SHIELD.h} />
+  );
+
+  return (
+    <Stage viewBox="140 60 986 1100" shadow={false}>
+      <defs>
+        <mask id={`${u}draw`} maskUnits="userSpaceOnUse" x="0" y="0" width={SHIELD.w} height={SHIELD.h}>
+          {SHIELD_HALVES.map((d, i) => (
+            <path key={i} d={d} pathLength={1} fill="none" stroke="white" strokeWidth={170}
+              strokeLinecap="round" strokeLinejoin="round" style={drawnRound(draw)} />
+          ))}
+        </mask>
+      </defs>
+      <g style={{ filter: `drop-shadow(0 0 ${30 * pulse}px rgba(80,240,255,${0.9 * pulse}))` }}>
+        <g mask={`url(#${u}draw)`}>{img('shield-outline.png')}</g>
+        <g
+          opacity={fall > 0 ? 1 : 0}
+          transform={
+            `translate(0 ${-520 * (1 - fall)}) ` +
+            `translate(${DROP_C.x} ${DROP_C.y + 290}) scale(${1 + squash} ${1 - squash}) translate(${-DROP_C.x} ${-DROP_C.y - 290})`
+          }
+        >
+          {img('shield-drop.png')}
+        </g>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 12. Interlocking gears turn ────────────────────────────────────────── */
+
+// Both gears have 8 teeth (45° pitch), so they mesh at equal speed in opposite
+// directions. 90° over the clip = two teeth, so frame 120 lines up with frame 0.
+const GEARS = { w: 1536, h: 1024 };
+const GEAR_PARTS = [
+  { file: 'gear-big.png', cx: 594, cy: 635, dir: 1, start: 0 },
+  { file: 'gear-small.png', cx: 1051.5, cy: 319.5, dir: -1, start: 6 },
+];
+
+export const GearsTurn = () => {
+  const frame = useCurrentFrame();
+  const angle = (90 * frame) / ICON_DURATION;
+
+  return (
+    <Stage viewBox="250 30 1100 940">
+      {GEAR_PARTS.map((g) => (
+        <Gear key={g.file} g={g} angle={angle * g.dir} />
+      ))}
+    </Stage>
+  );
+};
+
+const Gear = ({ g, angle }) => {
+  const s = Math.max(0, usePop(g.start, { damping: 12, stiffness: 140 }));
+  return (
+    <g transform={`translate(${g.cx} ${g.cy}) rotate(${angle}) scale(${s}) translate(${-g.cx} ${-g.cy})`}>
+      <SvgImage href={staticFile(`projects/icon-animations/${g.file}`)} width={GEARS.w} height={GEARS.h} />
+    </g>
+  );
+};
+
+/* ── 13. Connector: the green pin fills up ──────────────────────────────── */
+
+// connector-empty.png has the green faded to clear glass; connector.png is the
+// original. The original is revealed bottom → top inside the pin's column.
+const CONN = { w: 1327, h: 1186, pinX0: 570, pinX1: 760, pinTop: 185, pinBottom: 822, tip: { x: 663, y: 214 } };
+
+export const ConnectorCharge = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const enter = Math.max(0, usePop(0, { damping: 14, stiffness: 120 }));
+  const fill = progress(frame, 24, 40, Easing.inOut(Easing.quad));
+  const flash = interpolate(frame, [62, 70, 92], [0, 1, 0], clamp);
+  const level = CONN.pinBottom - (CONN.pinBottom - CONN.pinTop) * fill;
+  const img = (name) => (
+    <SvgImage href={staticFile(`projects/icon-animations/${name}`)} width={CONN.w} height={CONN.h} />
+  );
+
+  return (
+    <Stage viewBox="300 150 730 900" shadow={false}>
+      <defs>
+        <linearGradient id={`${u}edge`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stopColor="white" stopOpacity="0" />
+          <stop offset="1" stopColor="white" stopOpacity="1" />
+        </linearGradient>
+        <mask id={`${u}fill`} maskUnits="userSpaceOnUse" x="0" y="0" width={CONN.w} height={CONN.h}>
+          {/* soft leading edge on the rising liquid */}
+          <rect x={CONN.pinX0} y={level - 24} width={CONN.pinX1 - CONN.pinX0} height={24} fill={`url(#${u}edge)`} />
+          <rect x={CONN.pinX0} y={level} width={CONN.pinX1 - CONN.pinX0} height={CONN.h} fill="white" />
+        </mask>
+        <radialGradient id={`${u}glow`}>
+          <stop offset="0" stopColor="#b6ffb0" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#3dff4a" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <g opacity={Math.min(1, enter * 1.4)} transform={`translate(663 620) scale(${0.85 + 0.15 * enter}) translate(-663 -620)`}>
+        {img('connector-empty.png')}
+        <g mask={`url(#${u}fill)`} opacity={fill > 0 ? 1 : 0}>{img('connector.png')}</g>
+        <ellipse cx={CONN.tip.x} cy={CONN.tip.y} rx={150 * flash + 1} ry={110 * flash + 1} fill={`url(#${u}glow)`} opacity={flash} />
+      </g>
+    </Stage>
+  );
+};

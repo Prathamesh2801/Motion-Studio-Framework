@@ -9,6 +9,9 @@ import {
   FourVialsRise,
   DispenserPour,
   VialCapSlide,
+  ShieldDrop,
+  GearsTurn,
+  ConnectorCharge,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -38,6 +41,9 @@ export const PROJECTS = [
     ["FourVialsRise", FourVialsRise],
     ["DispenserPour", DispenserPour],
     ["VialCapSlide", VialCapSlide],
+    ["ShieldDrop", ShieldDrop],
+    ["GearsTurn", GearsTurn],
+    ["ConnectorCharge", ConnectorCharge],
   ].map(([id, component]) => ({
     id,
     component,
