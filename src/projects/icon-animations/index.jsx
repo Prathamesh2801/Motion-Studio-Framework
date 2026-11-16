@@ -776,3 +776,67 @@ export const ConnectorCharge = () => {
     </Stage>
   );
 };
+
+/* ── 14. Syringe: plunger presses, drops fall ───────────────────────────── */
+
+// Drawn in the syringe's own level frame (measured after rotating the source
+// 134.5° about its centroid), then rotated back. Needle points +x.
+const SYR = { angle: 134.5, cx: 799.1, cy: 491.3, pull: 150 };
+const SYR_BARREL = 'M 564 395.5 L 1018 395.5 Q 1070 395.5 1070 447 L 1070 516 Q 1070 567.5 1018 567.5 L 564 567.5';
+const SYR_TICKS = [726, 810, 905];
+const SYR_TIP = { x: 380, y: 950 }; // needle tip in screen space, just below the point
+const SYR_DROPS = [54, 68, 82];
+
+/** A teardrop that forms at the tip, hangs, then falls and fades. */
+const SyringeDrop = ({ start }) => {
+  const frame = useCurrentFrame();
+  const grow = progress(frame, start, 6, Easing.out(Easing.quad));
+  const fall = progress(frame, start + 8, 14, Easing.in(Easing.quad));
+  if (grow === 0 || fall === 1) return null;
+  return (
+    <g transform={`translate(${SYR_TIP.x} ${SYR_TIP.y + 120 * fall}) scale(${1.7 * grow})`} opacity={1 - fall}>
+      <path d="M 0 -18 C 10 -4 16 4 16 12 A 16 16 0 0 1 -16 12 C -16 4 -10 -4 0 -18 Z" fill="white" />
+    </g>
+  );
+};
+
+export const SyringePress = () => {
+  const frame = useCurrentFrame();
+  const barrel = progress(frame, 0, 24);
+  const flange = progress(frame, 8, 12);
+  const front = progress(frame, 14, 16);
+  const plungerIn = progress(frame, 16, 16, Easing.out(Easing.cubic));
+  const liquid = progress(frame, 26, 10);
+  const press = progress(frame, 42, 40, Easing.inOut(Easing.cubic));
+  const off = -SYR.pull * (1 - press); // plunger offset along the axis
+  const stroke = { fill: 'none', stroke: 'white', strokeWidth: 36, strokeLinecap: 'round', strokeLinejoin: 'round' };
+
+  return (
+    <Stage viewBox="300 -20 1000 1100">
+      <g transform={`rotate(${SYR.angle} ${SYR.cx} ${SYR.cy})`}>
+        {/* liquid drains toward the needle as the plunger presses */}
+        <rect
+          x={600 + 450 * press} y={413} width={450 * (1 - press)} height={135}
+          fill="white" opacity={0.3 * liquid}
+        />
+        <g {...stroke}>
+          <path d={SYR_BARREL} pathLength={1} style={drawnRound(barrel)} />
+          <path d="M 564 357 L 564 619" pathLength={1} style={drawnRound(flange)} />
+          {SYR_TICKS.map((x, i) => (
+            <path key={x} d={`M ${x} 567.5 L ${x} 503`} pathLength={1} style={drawnRound(progress(frame, 24 + i * 4, 8))} />
+          ))}
+          <rect x={1070} y={443.5} width={136} height={75.5} rx={18} pathLength={1} strokeWidth={35} style={drawnRound(front)} />
+          <path d="M 1222 478.5 L 1404 478.5" strokeWidth={27} pathLength={1} style={drawnRound(front)} />
+        </g>
+        {/* plunger: slides in already pulled back, then presses home */}
+        <g {...stroke} opacity={plungerIn} transform={`translate(${off - 120 * (1 - plungerIn)} 0)`}>
+          <path d="M 352 422 L 352 588" />
+          <path d={`M 366 518.5 L ${546 - off + 120 * (1 - plungerIn)} 518.5`} strokeWidth={41} strokeLinecap="butt" />
+        </g>
+      </g>
+      {SYR_DROPS.map((s) => (
+        <SyringeDrop key={s} start={s} />
+      ))}
+    </Stage>
+  );
+};

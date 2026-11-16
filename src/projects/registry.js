@@ -12,6 +12,7 @@ import {
   ShieldDrop,
   GearsTurn,
   ConnectorCharge,
+  SyringePress,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -44,6 +45,7 @@ export const PROJECTS = [
     ["ShieldDrop", ShieldDrop],
     ["GearsTurn", GearsTurn],
     ["ConnectorCharge", ConnectorCharge],
+    ["SyringePress", SyringePress],
   ].map(([id, component]) => ({
     id,
     component,
