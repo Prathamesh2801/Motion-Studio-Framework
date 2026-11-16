@@ -10,7 +10,7 @@ import {
 } from 'remotion';
 
 /**
- * Three icon animations redrawn from raw-assets/*.png. Each SVG uses the source
+ * Icon animations redrawn from raw-assets/*.png. Each SVG uses the source
  * PNG's pixel space as its viewBox, so coordinates were measured straight off
  * the originals. Backgrounds stay transparent — render as ProRes 4444.
  */
@@ -202,6 +202,223 @@ export const ChartArrow = () => {
         <g transform={`translate(265 50) scale(${Math.max(0, head)}) translate(-265 -50)`}>
           <path d={HEAD} />
         </g>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 4. Document, then the verified seal ────────────────────────────────── */
+
+const DOC =
+  'M 704 299 L 397 299 A 58 58 0 0 0 339 357 L 339 831 A 58 58 0 0 0 397 889 ' +
+  'L 805 889 A 58 58 0 0 0 862.5 831 L 862.5 471 Z';
+const FOLD = 'M 703.5 299 L 703.5 471.5 L 862.5 471.5';
+const DOC_LINES = [[434.5, 622], [535, 697], [631.5, 607], [734, 556]]; // y, right end
+const SEAL = { cx: 769, cy: 786.5, r: 161 };
+const DOC_TICK = 'M 695 784 L 753 843 L 852 737';
+
+/** Draw-on that also hides the round-cap dot a zero-length dash leaves behind. */
+const drawnRound = (p) => ({ ...drawn(p), opacity: p > 0 ? 1 : 0 });
+
+export const DocVerified = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const outline = progress(frame, 0, 30);
+  const fold = progress(frame, 24, 12);
+  const seal = Math.max(0, usePop(64));
+  const ring = progress(frame, 64, 18);
+  const tick = progress(frame, 78, 12);
+  const stroke = { fill: 'none', stroke: 'white', strokeWidth: 38, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const around = (s) => `translate(${SEAL.cx} ${SEAL.cy}) scale(${s}) translate(${-SEAL.cx} ${-SEAL.cy})`;
+
+  return (
+    <Stage viewBox="290 250 690 750">
+      <defs>
+        {/* The seal hides the page beneath it as it grows — never before it exists. */}
+        <mask id={`${u}seal`} maskUnits="userSpaceOnUse" x="250" y="200" width="800" height="850">
+          <rect x="250" y="200" width="800" height="850" fill="white" />
+          <circle cx={SEAL.cx} cy={SEAL.cy} r={145 * seal} fill="black" />
+        </mask>
+      </defs>
+      <g mask={`url(#${u}seal)`} {...stroke}>
+        <path d={DOC} pathLength={1} style={drawnRound(outline)} />
+        <path d={FOLD} pathLength={1} style={drawnRound(fold)} />
+        {DOC_LINES.map(([y, x2], i) => (
+          <path
+            key={i}
+            d={`M 429 ${y} L ${x2} ${y}`}
+            pathLength={1}
+            style={drawnRound(progress(frame, 34 + i * 6, 12))}
+          />
+        ))}
+      </g>
+      <g {...stroke} transform={around(seal)}>
+        <circle
+          cx={SEAL.cx}
+          cy={SEAL.cy}
+          r={SEAL.r}
+          strokeWidth={37}
+          pathLength={1}
+          transform={`rotate(-90 ${SEAL.cx} ${SEAL.cy})`}
+          style={drawnRound(ring)}
+        />
+        <path d={DOC_TICK} pathLength={1} style={drawnRound(tick)} />
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 5. Neon cylinder, right angle, 90 ──────────────────────────────────── */
+
+const NEON = '#7fd6ff';
+const CYL = { cx: 538, rx: 462, top: 148.5, topRy: 106, bottom: 997, bottomRy: 89 };
+const L = CYL.cx - CYL.rx;
+const R = CYL.cx + CYL.rx;
+const ellipse = (cy, ry) => `M ${L} ${cy} A ${CYL.rx} ${ry} 0 1 1 ${R} ${cy} A ${CYL.rx} ${ry} 0 1 1 ${L} ${cy}`;
+const BODY =
+  `M ${L} ${CYL.top} L ${L} ${CYL.bottom} A ${CYL.rx} ${CYL.bottomRy} 0 0 0 ${R} ${CYL.bottom} ` +
+  `L ${R} ${CYL.top} A ${CYL.rx} ${CYL.topRy} 0 0 1 ${L} ${CYL.top} Z`;
+// Dashed quarter-arc of the right-angle marker, centred on its corner.
+const ARC_C = { x: 1010, y: 1019, r: 170 };
+const arcPoint = (deg) => {
+  const t = (deg * Math.PI) / 180;
+  return `${ARC_C.x + ARC_C.r * Math.cos(t)} ${ARC_C.y + ARC_C.r * Math.sin(t)}`;
+};
+const ANGLE_ARC = `M ${arcPoint(-80)} A ${ARC_C.r} ${ARC_C.r} 0 0 1 ${arcPoint(-3)}`;
+
+export const Cylinder90 = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const rims = progress(frame, 0, 26);
+  const sides = progress(frame, 10, 22);
+  const glass = progress(frame, 24, 20);
+  const marker = progress(frame, 40, 16);
+  const foot = progress(frame, 54, 10);
+  const notch = progress(frame, 60, 6);
+  const arc = progress(frame, 62, 18);
+  const label = Math.max(0, usePop(66));
+  const count = Math.round(90 * progress(frame, 66, 30, Easing.out(Easing.cubic)));
+  const neon = {
+    fill: 'none',
+    stroke: NEON,
+    strokeWidth: 9,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    filter: `url(#${u}glow)`,
+  };
+
+  return (
+    <Stage viewBox="40 0 1320 1124" shadow={false}>
+      <defs>
+        <filter id={`${u}glow`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="6" result="near" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="far" />
+          <feMerge>
+            <feMergeNode in="far" />
+            <feMergeNode in="near" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <linearGradient id={`${u}body`} x1="0" x2="1">
+          <stop offset="0" stopColor={NEON} stopOpacity="0.45" />
+          {/* the glass highlight down the inside of the left wall */}
+          <stop offset="0.07" stopColor="#e6f7ff" stopOpacity="0.7" />
+          <stop offset="0.18" stopColor={NEON} stopOpacity="0.12" />
+          <stop offset="0.82" stopColor={NEON} stopOpacity="0.12" />
+          <stop offset="1" stopColor={NEON} stopOpacity="0.45" />
+        </linearGradient>
+        <radialGradient id={`${u}pool`}>
+          <stop offset="0" stopColor="#3fb6ff" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#0a63d8" stopOpacity="0.9" />
+        </radialGradient>
+        <mask id={`${u}arc`} maskUnits="userSpaceOnUse" x="900" y="800" width="400" height="300">
+          <path d={ANGLE_ARC} pathLength={1} fill="none" stroke="white" strokeWidth={30} style={drawn(arc)} />
+        </mask>
+      </defs>
+
+      <g opacity={glass}>
+        <path d={BODY} fill={`url(#${u}body)`} />
+        <ellipse cx={CYL.cx} cy={CYL.bottom - 4} rx={CYL.rx - 22} ry={CYL.bottomRy - 14} fill={`url(#${u}pool)`} />
+      </g>
+
+      <g {...neon}>
+        <path d={ellipse(CYL.top, CYL.topRy)} pathLength={1} style={drawn(rims)} />
+        <path d={ellipse(CYL.bottom, CYL.bottomRy)} pathLength={1} style={drawn(rims)} />
+        <path d={`M ${L} ${CYL.top} L ${L} ${CYL.bottom}`} pathLength={1} style={drawn(sides)} />
+        <path d={`M ${R} ${CYL.top} L ${R} ${CYL.bottom}`} pathLength={1} style={drawn(sides)} />
+        <path d="M 1000 140 L 1010 140 L 1010 1019" pathLength={1} style={drawn(marker)} />
+        <path d="M 1010 1019 L 1272 1019" pathLength={1} style={drawn(foot)} />
+        <path d="M 1010 857 L 1034 857" pathLength={1} style={drawn(notch)} />
+        <path d={ANGLE_ARC} strokeDasharray="16 13" mask={`url(#${u}arc)`} />
+      </g>
+
+      <g
+        opacity={Math.min(1, label * 1.5)}
+        transform={`translate(1194 770) scale(${0.6 + 0.4 * label}) translate(-1194 -770)`}
+      >
+        <text
+          x={1194}
+          y={858}
+          textAnchor="middle"
+          fontFamily="Arial, Helvetica, sans-serif"
+          fontWeight={700}
+          fontSize={240}
+          fill="#0b2a5e"
+          stroke={NEON}
+          strokeWidth={8}
+          paintOrder="stroke"
+          filter={`url(#${u}glow)`}
+        >
+          {count}
+        </text>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 6. Disc, then the droplets bead up ─────────────────────────────────── */
+
+// Measured on raw-assets/2 Icons.png (copied to disc.png); disc-clean.png has
+// them painted out. Each droplet is cut from disc.png with a soft elliptical mask.
+const DROPLETS = [
+  { cx: 271.5, cy: 96, rx: 17, ry: 17 },
+  { cx: 233, cy: 140.5, rx: 20, ry: 23.5 },
+  { cx: 197, cy: 196.5, rx: 25, ry: 26.5 },
+  { cx: 149, cy: 277, rx: 31, ry: 35 },
+];
+
+const Droplet = ({ d, i, u, start }) => {
+  const k = Math.max(0, usePop(start, { damping: 7, stiffness: 140 }));
+  // Squash-and-stretch: wider than tall on the overshoot, like a bead settling.
+  return (
+    <g transform={`translate(${d.cx} ${d.cy}) scale(${k} ${k * (2 - k)}) translate(${-d.cx} ${-d.cy})`}>
+      <mask id={`${u}d${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="447" height="401">
+        <ellipse cx={d.cx - 1} cy={d.cy + 1} rx={d.rx + 5} ry={d.ry + 5} fill="white" filter={`url(#${u}soft)`} />
+      </mask>
+      <image href={staticFile('projects/icon-animations/disc.png')} width={447} height={401} mask={`url(#${u}d${i})`} />
+    </g>
+  );
+};
+
+export const DropletBeads = () => {
+  const u = useUid();
+  const disc = usePop(0, { damping: 14, stiffness: 120 });
+
+  return (
+    <Stage viewBox="0 0 447 401" shadow={false}>
+      <defs>
+        <filter id={`${u}soft`}>
+          <feGaussianBlur stdDeviation="2" />
+        </filter>
+      </defs>
+      <g
+        opacity={Math.min(1, disc * 1.4)}
+        transform={`translate(212 203) scale(${0.85 + 0.15 * disc}) translate(-212 -203)`}
+      >
+        <image href={staticFile('projects/icon-animations/disc-clean.png')} width={447} height={401} />
+        {DROPLETS.map((d, i) => (
+          <Droplet key={i} d={d} i={i} u={u} start={30 + i * 14} />
+        ))}
       </g>
     </Stage>
   );

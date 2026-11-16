@@ -2,6 +2,9 @@ import {
   CloudSlash,
   VialsVerdict,
   ChartArrow,
+  DocVerified,
+  Cylinder90,
+  DropletBeads,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -24,6 +27,9 @@ export const PROJECTS = [
     ["CloudSlash", CloudSlash],
     ["VialsVerdict", VialsVerdict],
     ["ChartArrow", ChartArrow],
+    ["DocVerified", DocVerified],
+    ["Cylinder90", Cylinder90],
+    ["DropletBeads", DropletBeads],
   ].map(([id, component]) => ({
     id,
     component,
