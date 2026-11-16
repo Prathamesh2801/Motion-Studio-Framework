@@ -423,3 +423,72 @@ export const DropletBeads = () => {
     </Stage>
   );
 };
+
+/* ── 7. Two vials, then the caps seal on ────────────────────────────────── */
+
+// Each cap is cut from vials-duo.png along its bottom edge — an ellipse arc
+// fitted to the source (centre, radii). `neck` is the glass lip it lands on.
+const VIAL_W = 1254;
+const VIALS = [
+  { cap: { cx: 345, cy: 377, rx: 241, ry: 88 }, x0: 100, x1: 600, neck: { cx: 349, cy: 440, rx: 172 }, start: 0, drop: 26 },
+  { cap: { cx: 912, cy: 452, rx: 232, ry: 56 }, x0: 670, x1: 1160, neck: { cx: 916, cy: 488, rx: 167 }, start: 6, drop: 52 },
+];
+const LIFT = 300;
+
+/** Everything above the cap's bottom arc, within its vial's column. */
+const capRegion = ({ cap: c, x0, x1 }) =>
+  `M ${x0} 0 L ${x1} 0 L ${x1} ${c.cy} L ${c.cx + c.rx} ${c.cy} ` +
+  `A ${c.rx} ${c.ry} 0 0 1 ${c.cx - c.rx} ${c.cy} L ${x0} ${c.cy} Z`;
+
+export const VialsSealed = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const src = staticFile('projects/icon-animations/vials-duo.png');
+
+  return (
+    <Stage viewBox="80 60 1100 1120" shadow={false}>
+      <defs>
+        <mask id={`${u}bodies`} maskUnits="userSpaceOnUse" x="0" y="0" width={VIAL_W} height={VIAL_W}>
+          <rect width={VIAL_W} height={VIAL_W} fill="white" />
+          {VIALS.map((v, i) => <path key={i} d={capRegion(v)} fill="black" />)}
+        </mask>
+        {VIALS.map((v, i) => (
+          <React.Fragment key={i}>
+            <mask id={`${u}cap${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width={VIAL_W} height={VIAL_W}>
+              <path d={capRegion(v)} fill="white" />
+            </mask>
+            <clipPath id={`${u}col${i}`}>
+              <rect x={v.x0} y={0} width={v.x1 - v.x0} height={VIAL_W} />
+            </clipPath>
+          </React.Fragment>
+        ))}
+      </defs>
+
+      {VIALS.map((v, i) => {
+        const rise = progress(frame, v.start, 22, Easing.out(Easing.cubic));
+        // Easing.bounce settles at 1 from below, so the cap bounces on the neck
+        // instead of overshooting into the glass.
+        const fall = progress(frame, v.drop, 24, Easing.bounce);
+        const shown = progress(frame, v.drop, 5);
+        return (
+          <g key={i}>
+            <g opacity={rise} transform={`translate(0 ${50 * (1 - rise)})`}>
+              <g clipPath={`url(#${u}col${i})`}>
+                <image href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}bodies)`} />
+              </g>
+              {/* the open neck's glass lip — gone once the cap lands */}
+              <ellipse
+                cx={v.neck.cx} cy={v.neck.cy} rx={v.neck.rx} ry={16}
+                fill="none" stroke="white" strokeOpacity={0.55} strokeWidth={6}
+                opacity={1 - fall}
+              />
+            </g>
+            <g opacity={shown} transform={`translate(0 ${-LIFT * (1 - fall)})`}>
+              <image href={src} width={VIAL_W} height={VIAL_W} mask={`url(#${u}cap${i})`} />
+            </g>
+          </g>
+        );
+      })}
+    </Stage>
+  );
+};
