@@ -840,3 +840,146 @@ export const SyringePress = () => {
     </Stage>
   );
 };
+
+/* ── Shared: raster layers split from one source, and a brush reveal ────── */
+
+/** A full-canvas layer image from public/projects/icon-animations/. */
+const Layer = ({ name, w, h }) => (
+  <SvgImage href={staticFile(`projects/icon-animations/${name}.png`)} width={w} height={h} />
+);
+
+/** Mask that reveals its content along `paths` as `p` goes 0 → 1. */
+const BrushMask = ({ id, paths, width, p, w, h }) => (
+  <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
+    {paths.map((d, i) => (
+      <path key={i} d={d} pathLength={1} fill="none" stroke="white" strokeWidth={width}
+        strokeLinecap="round" strokeLinejoin="round" style={drawnRound(p)} />
+    ))}
+  </mask>
+);
+
+/** Scale `children` about (cx, cy). */
+const ScaleAbout = ({ cx, cy, sx, sy = sx, children, ...rest }) => (
+  <g transform={`translate(${cx} ${cy}) scale(${sx} ${sy}) translate(${-cx} ${-cy})`} {...rest}>
+    {children}
+  </g>
+);
+
+/* ── 15. Glass cylinder squeezed by the arrows ──────────────────────────── */
+
+const CYLS = { w: 1536, h: 1024, cx: 767, cy: 514 };
+
+export const CylinderSqueeze = () => {
+  const frame = useCurrentFrame();
+  const body = Math.max(0, usePop(0, { damping: 14, stiffness: 120 }));
+  const fly = progress(frame, 18, 18, Easing.out(Easing.cubic));
+  // two presses: each a short in-and-out pulse
+  const press = [48, 72].reduce((acc, s) => Math.max(acc, Math.sin(Math.PI * progress(frame, s, 14, (t) => t))), 0);
+  const nudge = 300 * (1 - fly) - 16 * press;
+
+  return (
+    <Stage viewBox="200 40 1140 950" shadow={false}>
+      <ScaleAbout cx={CYLS.cx} cy={CYLS.cy} sx={(0.85 + 0.15 * body) * (1 - 0.035 * press)} sy={0.85 + 0.15 * body}
+        opacity={Math.min(1, body * 1.4)}>
+        <Layer name="cyl-body" w={CYLS.w} h={CYLS.h} />
+      </ScaleAbout>
+      <g opacity={fly} transform={`translate(${-nudge} 0)`}>
+        <Layer name="cyl-arrow-l" w={CYLS.w} h={CYLS.h} />
+      </g>
+      <g opacity={fly} transform={`translate(${nudge} 0)`}>
+        <Layer name="cyl-arrow-r" w={CYLS.w} h={CYLS.h} />
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 16. Hand rises, the medical cross drops into it ────────────────────── */
+
+const HANDC = { w: 1312, h: 1199, cross: { x: 740, y: 372 } };
+
+export const HandCross = () => {
+  const frame = useCurrentFrame();
+  const hand = progress(frame, 0, 22, Easing.out(Easing.cubic));
+  const drop = progress(frame, 22, 26, Easing.bounce);
+  const pop = Math.max(0, usePop(22, { damping: 10, stiffness: 150 }));
+  // one gentle float that ends exactly where it started
+  const bob = -10 * Math.sin(2 * Math.PI * progress(frame, 60, 60, (t) => t));
+
+  return (
+    <Stage viewBox="100 90 1060 1050">
+      <g opacity={hand} transform={`translate(0 ${120 * (1 - hand)})`}>
+        <Layer name="hand" w={HANDC.w} h={HANDC.h} />
+      </g>
+      <g opacity={drop > 0 ? 1 : 0} transform={`translate(0 ${-320 * (1 - drop) + bob})`}>
+        <ScaleAbout cx={HANDC.cross.x} cy={HANDC.cross.y} sx={0.6 + 0.4 * pop}>
+          <Layer name="hand-cross" w={HANDC.w} h={HANDC.h} />
+        </ScaleAbout>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 17. Tooth vs syringe: both pop in, the slash draws between them ────── */
+
+const TOOTHV = { w: 1584, h: 993 };
+const TOOTH_SLASH = ['M 1048 40 L 524 908'];
+
+export const ToothVsSyringe = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const tooth = Math.max(0, usePop(0));
+  const syringe = Math.max(0, usePop(10));
+  const slash = progress(frame, 32, 18, Easing.inOut(Easing.cubic));
+
+  return (
+    <Stage viewBox="60 20 1460 920" shadow={false}>
+      <defs>
+        <BrushMask id={`${u}slash`} paths={TOOTH_SLASH} width={130} p={slash} w={TOOTHV.w} h={TOOTHV.h} />
+      </defs>
+      <ScaleAbout cx={384} cy={408} sx={tooth}>
+        <Layer name="tooth" w={TOOTHV.w} h={TOOTHV.h} />
+      </ScaleAbout>
+      <ScaleAbout cx={1136} cy={460} sx={syringe}>
+        <Layer name="tooth-syringe" w={TOOTHV.w} h={TOOTHV.h} />
+      </ScaleAbout>
+      <g mask={`url(#${u}slash)`}>
+        <Layer name="tooth-slash" w={TOOTHV.w} h={TOOTHV.h} />
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 18. Shield draws on, then the tick ─────────────────────────────────── */
+
+const SHIELDC = { w: 1268, h: 1241 };
+const SHIELDC_HALVES = [
+  'M 634 145 C 560 230 420 290 240 318 L 220 420 C 222 700 380 960 634 1110',
+  'M 634 145 C 708 230 848 290 1028 318 L 1050 420 C 1046 700 888 960 634 1110',
+];
+const SHIELDC_TICK = ['M 440 612 L 585 785 L 870 480'];
+
+export const ShieldCheck = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const outline = progress(frame, 0, 34);
+  const tick = progress(frame, 38, 18, Easing.inOut(Easing.quad));
+  const settle = Math.max(0, usePop(56, { damping: 9, stiffness: 160 }));
+  const thump = frame < 56 ? 1 : 1 + 0.05 * Math.sin(Math.PI * Math.min(1, settle));
+
+  return (
+    <Stage viewBox="160 80 950 1090">
+      <defs>
+        <BrushMask id={`${u}outline`} paths={SHIELDC_HALVES} width={170} p={outline} w={SHIELDC.w} h={SHIELDC.h} />
+        <BrushMask id={`${u}tick`} paths={SHIELDC_TICK} width={130} p={tick} w={SHIELDC.w} h={SHIELDC.h} />
+      </defs>
+      <ScaleAbout cx={634} cy={620} sx={thump}>
+        <g mask={`url(#${u}outline)`}>
+          <Layer name="shieldcheck-outline" w={SHIELDC.w} h={SHIELDC.h} />
+        </g>
+        <g mask={`url(#${u}tick)`}>
+          <Layer name="shieldcheck-tick" w={SHIELDC.w} h={SHIELDC.h} />
+        </g>
+      </ScaleAbout>
+    </Stage>
+  );
+};

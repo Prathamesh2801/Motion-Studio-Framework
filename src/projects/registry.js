@@ -13,6 +13,10 @@ import {
   GearsTurn,
   ConnectorCharge,
   SyringePress,
+  CylinderSqueeze,
+  HandCross,
+  ToothVsSyringe,
+  ShieldCheck,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -46,6 +50,10 @@ export const PROJECTS = [
     ["GearsTurn", GearsTurn],
     ["ConnectorCharge", ConnectorCharge],
     ["SyringePress", SyringePress],
+    ["CylinderSqueeze", CylinderSqueeze],
+    ["HandCross", HandCross],
+    ["ToothVsSyringe", ToothVsSyringe],
+    ["ShieldCheck", ShieldCheck],
   ].map(([id, component]) => ({
     id,
     component,
