@@ -17,6 +17,11 @@ import {
   HandCross,
   ToothVsSyringe,
   ShieldCheck,
+  GoldCapsDrop,
+  VialSqueeze,
+  VialBandsFit,
+  TwinVialsClink,
+  TealPour,
   ICON_DURATION,
 } from "./icon-animations/index.jsx";
 
@@ -54,6 +59,11 @@ export const PROJECTS = [
     ["HandCross", HandCross],
     ["ToothVsSyringe", ToothVsSyringe],
     ["ShieldCheck", ShieldCheck],
+    ["GoldCapsDrop", GoldCapsDrop],
+    ["VialSqueeze", VialSqueeze],
+    ["VialBandsFit", VialBandsFit],
+    ["TwinVialsClink", TwinVialsClink],
+    ["TealPour", TealPour],
   ].map(([id, component]) => ({
     id,
     component,

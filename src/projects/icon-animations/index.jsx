@@ -983,3 +983,217 @@ export const ShieldCheck = () => {
     </Stage>
   );
 };
+
+/** A column of a layer rising out of a floor line, settling with a little spring. */
+const RiseFromFloor = ({ id, x0, x1, top, floor, start, children }) => {
+  const s = usePop(start, { damping: 13, stiffness: 120 });
+  return (
+    <>
+      <clipPath id={id}>
+        <rect x={x0} y={-2000} width={x1 - x0} height={floor + 2000} />
+      </clipPath>
+      <g clipPath={`url(#${id})`}>
+        <g transform={`translate(0 ${(floor - top + 20) * (1 - s)})`}>{children}</g>
+      </g>
+    </>
+  );
+};
+
+/* ── 19. Two vials rise, the gold caps drop on ──────────────────────────── */
+
+// goldcaps-caps.png holds the caps, cut along their bottom arcs; goldcaps-vials.png the rest.
+const GOLD = { w: 1254, h: 1254, floor: 1205 };
+const GOLD_VIALS = [
+  { x0: 0, x1: 650, top: 177, rise: 0, drop: 34 },
+  { x0: 650, x1: 1254, top: 335, rise: 8, drop: 44 },
+];
+
+export const GoldCapsDrop = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+
+  return (
+    <Stage viewBox="230 20 820 1220" shadow={false}>
+      {GOLD_VIALS.map((v, i) => {
+        // Easing.bounce settles at 1 from below, so the cap bounces on the neck.
+        const fall = progress(frame, v.drop, 24, Easing.bounce);
+        return (
+          <g key={i}>
+            <RiseFromFloor id={`${u}v${i}`} {...v} floor={GOLD.floor} start={v.rise}>
+              <Layer name="goldcaps-vials" w={GOLD.w} h={GOLD.h} />
+            </RiseFromFloor>
+            <clipPath id={`${u}c${i}`}>
+              <rect x={v.x0} y={-1000} width={v.x1 - v.x0} height={GOLD.h + 1000} />
+            </clipPath>
+            <g clipPath={`url(#${u}c${i})`} opacity={progress(frame, v.drop, 5)}>
+              <g transform={`translate(0 ${-320 * (1 - fall)})`}>
+                <Layer name="goldcaps-caps" w={GOLD.w} h={GOLD.h} />
+              </g>
+            </g>
+          </g>
+        );
+      })}
+    </Stage>
+  );
+};
+
+/* ── 20. Tall vial, the cyan arrows press in on it ──────────────────────── */
+
+// vial-arrows-clean.png has the glow behind the arrows rebuilt as plain glass.
+const VSQ = { w: 887, h: 1774, cx: 443, cy: 940 };
+
+export const VialSqueeze = () => {
+  const frame = useCurrentFrame();
+  const body = Math.max(0, usePop(0, { damping: 14, stiffness: 120 }));
+  const fly = progress(frame, 18, 18, Easing.out(Easing.cubic));
+  // two presses: each a short in-and-out pulse
+  const press = [48, 72].reduce((acc, s) => Math.max(acc, Math.sin(Math.PI * progress(frame, s, 14, (t) => t))), 0);
+  const nudge = 260 * (1 - fly) - 14 * press;
+  const glow = { filter: `drop-shadow(0 0 ${18 * press}px rgba(60,230,255,${0.9 * press}))` };
+
+  return (
+    <Stage viewBox="-60 -20 1007 1814" shadow={false}>
+      <ScaleAbout cx={VSQ.cx} cy={VSQ.cy} sx={(0.85 + 0.15 * body) * (1 - 0.03 * press)} sy={0.85 + 0.15 * body}
+        opacity={Math.min(1, body * 1.4)}>
+        <Layer name="vial-arrows-clean" w={VSQ.w} h={VSQ.h} />
+      </ScaleAbout>
+      <g opacity={fly} style={glow}>
+        <g transform={`translate(${-nudge} 0)`}>
+          <Layer name="vial-arrow-l" w={VSQ.w} h={VSQ.h} />
+        </g>
+        <g transform={`translate(${nudge} 0)`}>
+          <Layer name="vial-arrow-r" w={VSQ.w} h={VSQ.h} />
+        </g>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 21. Vial rises, cap drops on, the riveted fitting slides down ──────── */
+
+// bands-vial.png has the glass behind the fitting rebuilt; the fitting slides
+// down the straight part of the vial, so it never leaves the glass.
+const BANDS = { w: 1088, h: 1445, cx: 545, cy: 995, slide: 480 };
+
+export const VialBandsFit = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const u = useUid();
+  const cap = progress(frame, 22, 24, Easing.bounce);
+  const slide = progress(frame, 50, 26, Easing.out(Easing.back(1.3)));
+  // the fitting arrives a touch loose, then clamps onto the glass
+  const grip = spring({ frame: frame - 74, fps, config: { damping: 9, stiffness: 170 } });
+  const loose = frame < 74 ? 0.08 : 0.08 * (1 - grip);
+
+  return (
+    <Stage viewBox="180 -40 730 1510" shadow={false}>
+      <RiseFromFloor id={`${u}v`} x0={0} x1={BANDS.w} top={172} floor={BANDS.h} start={0}>
+        <Layer name="bands-vial" w={BANDS.w} h={BANDS.h} />
+      </RiseFromFloor>
+      <g opacity={progress(frame, 22, 5)} transform={`translate(0 ${-300 * (1 - cap)})`}>
+        <Layer name="bands-cap" w={BANDS.w} h={BANDS.h} />
+      </g>
+      <g opacity={progress(frame, 50, 8)} transform={`translate(0 ${-BANDS.slide * (1 - slide)})`}>
+        <ScaleAbout cx={BANDS.cx} cy={BANDS.cy} sx={1 + loose} sy={1}>
+          <Layer name="bands-fitting" w={BANDS.w} h={BANDS.h} />
+        </ScaleAbout>
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 22. Twin vials rise, then clink together twice ─────────────────────── */
+
+// Each vial tips about the centre of its base. Their lips are 73px apart, so
+// 1.6° (≈35px at the top) each just closes the gap.
+const TWIN = { w: 1199, h: 1312, floor: 1290, tilt: 1.6, spark: { x: 600, y: 40 } };
+const TWIN_VIALS = [
+  { x0: 0, x1: 600, top: 29, start: 0, base: 475, dir: 1 },
+  { x0: 600, x1: 1199, top: 29, start: 9, base: 723, dir: -1 },
+];
+const CLINKS = [50, 72];
+// 4-point star, unit radius
+const SPARK = 'M 0 -1 C 0.08 -0.2 0.2 -0.08 1 0 C 0.2 0.08 0.08 0.2 0 1 C -0.08 0.2 -0.2 0.08 -1 0 C -0.2 -0.08 -0.08 -0.2 0 -1 Z';
+
+export const TwinVialsClink = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  // each clink: tip in, touch at the midpoint, settle back upright
+  const tip = CLINKS.reduce((acc, s) => Math.max(acc, Math.sin(Math.PI * progress(frame, s, 14, (t) => t))), 0);
+  const spark = CLINKS.reduce((acc, s) => Math.max(acc, interpolate(frame, [s + 5, s + 8, s + 20], [0, 1, 0], clamp)), 0);
+
+  return (
+    <Stage viewBox="230 -60 740 1370" shadow={false}>
+      {TWIN_VIALS.map((v, i) => (
+        <RiseFromFloor key={i} id={`${u}c${i}`} {...v} floor={TWIN.floor}>
+          <g transform={`rotate(${v.dir * TWIN.tilt * tip} ${v.base} ${TWIN.floor})`}>
+            <Layer name="twin-vials" w={TWIN.w} h={TWIN.h} />
+          </g>
+        </RiseFromFloor>
+      ))}
+      <g
+        transform={`translate(${TWIN.spark.x} ${TWIN.spark.y}) rotate(${45 * spark}) scale(${70 * spark})`}
+        opacity={spark}
+        style={{ filter: 'drop-shadow(0 0 8px rgba(190,235,255,0.9))' }}
+      >
+        <path d={SPARK} fill="white" />
+      </g>
+    </Stage>
+  );
+};
+
+/* ── 23. Dispensers lower over two vials, teal streams pour ─────────────── */
+
+// teal-clean.png has the streams lifted out (glass inside the necks rebuilt);
+// teal-streams.png holds just the streams. NOZZLE splits dispensers from vials.
+const TEAL = { w: 948, h: 1659, nozzle: 640, pourTop: 584, pourBottom: 740 };
+const TEAL_COLS = [[0, 474], [474, 948]];
+
+export const TealPour = () => {
+  const frame = useCurrentFrame();
+  const u = useUid();
+  const img = (name) => <Layer name={name} w={TEAL.w} h={TEAL.h} />;
+
+  return (
+    <Stage viewBox="60 60 830 1520" shadow={false}>
+      <defs>
+        {TEAL_COLS.map(([x0, x1], i) => (
+          <React.Fragment key={i}>
+            <clipPath id={`${u}top${i}`}>
+              <rect x={x0} y={0} width={x1 - x0} height={TEAL.nozzle} />
+            </clipPath>
+            <clipPath id={`${u}bot${i}`}>
+              <rect x={x0} y={TEAL.nozzle} width={x1 - x0} height={TEAL.h - TEAL.nozzle} />
+            </clipPath>
+            {/* the stream grows down from the nozzle */}
+            <clipPath id={`${u}pour${i}`}>
+              <rect
+                x={x0}
+                y={TEAL.pourTop}
+                width={x1 - x0}
+                height={(TEAL.pourBottom - TEAL.pourTop) * progress(frame, 46 + i * 12, 14, Easing.in(Easing.quad))}
+              />
+            </clipPath>
+          </React.Fragment>
+        ))}
+      </defs>
+
+      {TEAL_COLS.map((_, i) => {
+        const rise = progress(frame, i * 5, 22, Easing.out(Easing.cubic));
+        const lower = progress(frame, 14 + i * 5, 24, Easing.out(Easing.back(1.2)));
+        return (
+          <g key={i}>
+            {/* clips inside the transforms: each cut travels with its piece */}
+            <g transform={`translate(0 ${70 * (1 - rise)})`} opacity={rise}>
+              <g clipPath={`url(#${u}bot${i})`}>{img('teal-clean')}</g>
+            </g>
+            <g clipPath={`url(#${u}pour${i})`}>{img('teal-streams')}</g>
+            <g transform={`translate(0 ${-160 * (1 - lower)})`} opacity={Math.min(1, lower * 1.5)}>
+              <g clipPath={`url(#${u}top${i})`}>{img('teal-clean')}</g>
+            </g>
+          </g>
+        );
+      })}
+    </Stage>
+  );
+};
